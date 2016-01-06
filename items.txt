@@ -1,0 +1,31 @@
+Commandes Externes
++commande simple en avant-plan 10
++commande simple en arrière-plan (&) 10
+++élimination des zombies 10
+
+Expressions
++expression ; expression 0
++expression || expression 0
++expression && expression 0
+++( expression ) 0
+++expression | expression 0
+++expression > fichier 0
+++expression < fichier 0
+++expression >> fichier 0
++++expressions récursives 0
+
+Commandes Internes
++echo 8
++date 8
++cd 0
++pwd 0
++history 0
++hostname 0
++kill 0
++exit 0
+
+Remote Shell
++gestion d’une liste de machines (add, remove, list) 0
++exécution sur un unique shell faussement distant (remote localhost ...) 0
+++exécution sur plusieurs shells distants avec ssh (remote all ...) 0
++++affichage dans des fenêtres séparées avec xcat.sh 0
