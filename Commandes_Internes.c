@@ -17,27 +17,7 @@ void verifier(int b,char* m)
     }
 }
 
-int date(char** arg);
-int echo(char** arg);
-
-typedef struct assoc {
-    char* name;
-    int (*data) (char** params);
-} assoc;
-
-assoc tab_cmd_intern[] = {{"date", date},
-			  {"echo", echo}};
-
-int (*get_intern (char* name)) (char**)
-{
-    int taille_tab_cmd_intern = sizeof (tab_cmd_intern)/sizeof(assoc);
-    for (int i=0; i<taille_tab_cmd_intern; i++)
-	if (strcmp(name,tab_cmd_intern[i].name)==0)
-	    return tab_cmd_intern[i].data;
-    return NULL;
-}
-
-int echo(char** param){
+int echo(char** arg){
   char ptr;
   int c=1;
   while (c>=1){
@@ -48,7 +28,7 @@ int echo(char** param){
   return 0;
 }
 
-int date(char** param){
+int date(char** arg){
 
   char c[256]; 
   time_t tmp = time(NULL);
@@ -60,3 +40,15 @@ int date(char** param){
   return 0;
 }
 
+
+int cd (char** arg){
+  if (arg[1]==NULL){
+    int r = chdir(getenv("HOME"));
+    verifier(r!=-1),"erreur dans la variable d'environement HOME");
+  }
+  else{
+  int r = chdir(arg[1]);
+  verifier(r!=-1, "Aucun fichier ou dossier de ce type");
+  }
+  return r;
+}
