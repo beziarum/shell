@@ -3,7 +3,10 @@
 
 #include "Shell.h"
 
+#include <stdbool.h>
+
 typedef struct Contexte {
+    bool bg;
 } Contexte;
 
 extern int (*get_expr (expr_t e))(Expression*, Contexte*);
