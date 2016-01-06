@@ -19,6 +19,7 @@ void verifier(int b,char* m)
 
 int date(char** arg);
 int echo(char** arg);
+int pwd();
 
 typedef struct assoc {
     char* name;
@@ -26,7 +27,9 @@ typedef struct assoc {
 } assoc;
 
 assoc tab_cmd_intern[] = {{"date", date},
-			  {"echo", echo}};
+			  {"echo", echo},
+			  {"pwd", pwd}}
+};
 
 int (*get_intern (char* name)) (char**)
 {
@@ -71,4 +74,11 @@ int cd (char** arg){
   verifier(r!=-1, "Aucun fichier ou dossier de ce type");
   }
   return r;
+}
+
+int pwd() {
+  char pwd[500];
+  getcwd(pwd, sizeof(pwd));
+  printf("%s\n", pwd);
+  return 0;
 }
