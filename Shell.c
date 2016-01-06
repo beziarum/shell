@@ -86,6 +86,7 @@ char **AjouterArg (char **Liste, char *Arg)
  */
 void EndOfFile (void)
 {
+    printf("\n");
   exit (0);
 } /* EndOfFile */
 
