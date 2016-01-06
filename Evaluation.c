@@ -26,7 +26,7 @@ int expr_not_implemented (Expression* e, Contexte* c)
 int expr_bg (Expression* e, Contexte* c)
 {
     c->bg=true;
-    return get_expr(e->type)(e->gauche, c);
+    return get_expr(e->gauche->type)(e->gauche, c);
 }
 
 int expr_simple (Expression* e, Contexte* c)
