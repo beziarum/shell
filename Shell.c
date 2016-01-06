@@ -233,6 +233,7 @@ main (int argc, char **argv)
     if (my_yyparse () == 0) {  /* L'analyse a abouti */   
       afficher_expr(ExpressionAnalysee);
       fflush(stdout);
+      status = evaluer_expr(ExpressionAnalysee);
       expression_free(ExpressionAnalysee);
     }
     else {
