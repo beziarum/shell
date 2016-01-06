@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-
+#include <sys/wait.h>
 extern int yyparse_string(char *);
 
  bool interactive_mode = 1; // par défaut on utilise readline 
@@ -235,6 +235,12 @@ main (int argc, char **argv)
       fflush(stdout);
       status = evaluer_expr(ExpressionAnalysee);
       expression_free(ExpressionAnalysee);
+
+      int pid,status;
+      while( (pid = waitpid(-1,&status,WNOHANG)) > 0)
+	  printf("le processus %d est fini (%d)\n",
+		 pid,
+		 WIFEXITED(status) ? WEXITSTATUS(status) : 128+WTERMSIG(status));
     }
     else {
       /* L'analyse de la ligne de commande a donné une erreur */

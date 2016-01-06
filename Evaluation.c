@@ -4,20 +4,29 @@
 #include "Evaluation.h"
 #include "Commandes_Internes.h"
 
+
 int expr_simple(Expression* e, Contexte* c);
+int expr_bg(Expression* e, Contexte* c);
 
 typedef struct assoc {
     expr_t expr;
     int (*data) (Expression*,Contexte*);
 } assoc;
 
-assoc tab_expr[] = {{SIMPLE,expr_simple}};
+assoc tab_expr[] = {{SIMPLE, expr_simple},
+		    {BG, expr_bg}};
 
 int expr_not_implemented (Expression* e, Contexte* c)
 {
     fprintf(stderr,"fonctionnalité non implémentée\n");
-  
+    
     return 1;
+}
+
+int expr_bg (Expression* e, Contexte* c)
+{
+    c->bg=true;
+    return get_expr(e->gauche->type)(e->gauche, c);
 }
 
 int expr_simple (Expression* e, Contexte* c)
@@ -31,8 +40,11 @@ int expr_simple (Expression* e, Contexte* c)
     }
     else
     {
-	waitpid(pid,NULL,0);//en cas d'erreur, on ne récupère pas le code, à améliorer du coup
-	return 0;
+	if (c->bg)
+	    return 0;
+	int status;
+	waitpid(pid,&status,0);
+	return WIFEXITED(status) ? WEXITSTATUS(status) : WTERMSIG(status);
     }
 }
 
@@ -49,5 +61,6 @@ int
 evaluer_expr(Expression *e)
 {
     Contexte* c=malloc(sizeof(Contexte));
+    c->bg=false;
     return get_expr(e->type)(e,c);
 }
