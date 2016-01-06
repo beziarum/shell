@@ -34,9 +34,15 @@ int expr_simple (Expression* e, Contexte* c)
     pid_t pid=fork();
     if(pid==0)
     {
-	execvp(e->arguments[0],e->arguments);
-	perror(e->arguments[0]);
-	exit(1);
+	int (*intern)(char**)=get_intern(e->arguments[0]);
+	if(intern!=NULL)
+	    exit(intern(e->arguments));
+	else
+	{
+	    execvp(e->arguments[0],e->arguments);
+	    perror(e->arguments[0]);
+	    exit(1);
+	}
     }
     else
     {
