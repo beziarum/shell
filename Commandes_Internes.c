@@ -19,6 +19,7 @@ void verifier(int b,char* m)
 
 int date(char** arg);
 int echo(char** arg);
+int cd(char** arg);
 
 typedef struct assoc {
     char* name;
@@ -26,7 +27,8 @@ typedef struct assoc {
 } assoc;
 
 assoc tab_cmd_intern[] = {{"date", date},
-			  {"echo", echo}};
+			  {"echo", echo},
+			  {"cd", cd}};
 
 int (*get_intern (char* name)) (char**)
 {
@@ -62,12 +64,13 @@ int date(char** param){
 
 
 int cd (char** arg){
+  int r;
   if (arg[1]==NULL){
-    int r = chdir(getenv("HOME"));
-    verifier(r!=-1),"erreur dans la variable d'environement HOME");
+    r = chdir(getenv("HOME"));
+    verifier(r!=-1,"erreur dans la variable d'environement HOME");
   }
   else{
-  int r = chdir(arg[1]);
+  r = chdir(arg[1]);
   verifier(r!=-1, "Aucun fichier ou dossier de ce type");
   }
   return r;
