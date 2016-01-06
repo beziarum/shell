@@ -7,6 +7,7 @@
 
 int expr_simple(Expression* e, Contexte* c);
 int expr_bg(Expression* e, Contexte* c);
+int expr_sequence(Expression* e, Contexte* c);
 
 typedef struct assoc {
     expr_t expr;
@@ -14,13 +15,20 @@ typedef struct assoc {
 } assoc;
 
 assoc tab_expr[] = {{SIMPLE, expr_simple},
-		    {BG, expr_bg}};
+		    {BG, expr_bg},
+		    {SEQUENCE, expr_sequence}};
 
 int expr_not_implemented (Expression* e, Contexte* c)
 {
     fprintf(stderr,"fonctionnalité non implémentée\n");
     
     return 1;
+}
+
+int expr_sequence(Expression* e, Contexte* c)
+{
+    get_expr(e->gauche->type)(e->gauche, c);
+    return get_expr(e->droite->type)(e->droite, c);
 }
 
 int expr_bg (Expression* e, Contexte* c)
