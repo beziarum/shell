@@ -31,8 +31,9 @@ int expr_simple (Expression* e, Contexte* c)
     }
     else
     {
-	waitpid(pid,NULL,0);//en cas d'erreur, on ne récupère pas le code, à améliorer du coup
-	return 0;
+	int status;
+	waitpid(pid,&status,0);//en cas d'erreur, on ne récupère pas le code, à améliorer du coup
+	return WIFEXITED(status) ? WEXITSTATUS(status) : WTERMSIG(status);
     }
 }
 
