@@ -60,3 +60,15 @@ int date(char** param){
   return 0;
 }
 
+
+int cd (char** arg){
+  if (arg[1]==NULL){
+    int r = chdir(getenv("HOME"));
+    verifier(r!=-1),"erreur dans la variable d'environement HOME");
+  }
+  else{
+  int r = chdir(arg[1]);
+  verifier(r!=-1, "Aucun fichier ou dossier de ce type");
+  }
+  return r;
+}
