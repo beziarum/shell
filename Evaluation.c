@@ -4,12 +4,14 @@
 #include "Evaluation.h"
 #include "Commandes_Internes.h"
 
+int expr_simple(Expression* e, Contexte* c);
+
 typedef struct assoc {
     expr_t expr;
     int (*data) (Expression*,Contexte*);
 } assoc;
 
-assoc tab_expr[] = {{VIDE,NULL}};
+assoc tab_expr[] = {{SIMPLE,expr_simple}};
 
 int expr_not_implemented (Expression* e, Contexte* c)
 {
