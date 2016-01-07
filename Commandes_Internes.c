@@ -9,27 +9,31 @@
 #include <time.h>
 #include <signal.h>
 #include <readline/history.h>
+#include <limits.h>
 
-void verifier(int b,char* m)
-{
-    if(!b)
-	perror(m);
-}
-
+/*
+ *Déclaration des commandes
+ */
 int date(char** arg);
 int echo(char** arg);
 int cd(char** arg);
 int my_exit(char ** arg);
-int hostname(char ** arg);
+int hostname(char **);
 int pwd(char ** arg);
 int hostname(char ** arg);
 int killShell(char** arg);
-int history(char ** arg);
+int history(char **);
 
+
+/*
+ *structure association qui fait correspondre une
+ *chaine de carractere à un pointeur sur fonction
+ */
 typedef struct assoc {
     char* name;
     int (*data) (char** params);
 } assoc;
+
 
 assoc tab_cmd_intern[] = {{"date", date},
 			  {"echo", echo},
@@ -41,6 +45,14 @@ assoc tab_cmd_intern[] = {{"date", date},
 			  {"kill",killShell},
 			  {"history", history}};
 
+
+void verifier(int b,char* m)
+{
+    if(!b)
+	perror(m);
+}
+
+
 int (*get_intern (char* name)) (char**)
 {
     int taille_tab_cmd_intern = sizeof (tab_cmd_intern)/sizeof(assoc);
@@ -50,45 +62,54 @@ int (*get_intern (char* name)) (char**)
     return NULL;
 }
 
+/*
+ *Commande echo
+ */
 int echo(char** param){
   int c=1;
   while (param[c]!=NULL){
-    printf("%s ",param[c]);
+    printf("%s ",param[c]); //on affiche simplement ces parametres sur la sortie standard
     c++;
   }
   printf("\n");
   return 0;
 }
 
+/*
+ *Commande date
+ */
 int date(char** param){
 
   char c[256]; 
-  time_t tmp = time(NULL);
-  struct tm * t;
-  t =localtime(&tmp);
+  time_t tmp = time(NULL);// on recupére le temps en seconde
+  struct tm * t =localtime(&tmp); // on génére une structure tm
 
-  strftime(c, sizeof(c), "%A %d %B %Y, %X (UTC%z)",t); 
+  strftime(c, sizeof(c), "%A %d %B %Y, %X (UTC%z)",t); // on affiche celon le format français
   printf("%s\n", c);
   return 0;
 }
 
 
+/*
+ *Commande cd
+ */
 int cd (char** arg){
   int r;
   if (arg[1]==NULL){
-    r = chdir(getenv("HOME"));
+    r = chdir(getenv("HOME"));// cas d'un retour au home cd sans paramétre
     verifier(r!=-1,"erreur dans la variable d'environement HOME");
   }
   else{
-  r = chdir(arg[1]);
-  verifier(r!=-1, "Aucun fichier ou dossier de ce type");
+    r = chdir(arg[1]); //cas classique on apelle juste chdir avec le nom du dossier
+    verifier(r!=-1, "Aucun fichier ou dossier de ce type");
   }
   return r;
 }
 
 
-/* Commande qui affiche le répertoire courant */
-
+/* 
+ * Commande qui affiche le répertoire courant
+ */
 int pwd(char ** arg) {
   char pwd[500];
   getcwd(pwd, sizeof(pwd));
@@ -97,62 +118,74 @@ int pwd(char ** arg) {
 }
 
 
-/* Commande qui affiche le nom de l'hote local */
- 
+/*
+ * Commande qui affiche le nom de l'hote local
+ */
 int hostname(char ** arg) {
-  char hostname[500];
-  gethostname(hostname, 500);
+  char hostname[HOST_NAME_MAX +1];
+  gethostname(hostname,sizeof(hostname));
   printf("Hostname : %s\n", hostname);
   return 0;
 }
 
 
-/* Commande permettant que quitter le shell */
+/*
+ * Commande permettant que quitter le shell
+ */
 
 int my_exit(char ** arg) {
-  if (arg[1] != NULL)            // si il y a un argument
-    exit(atoi(arg[1]));          // on quitte le shell en renvoyant la valeur de l'agument
+  if (arg[1] != NULL)         // si il y a un argument
+    exit(atoi(arg[1]));       // on quitte le shell en renvoyant la valeur de l'agument
   else
     exit(0);
 }
 
 
+/**
+ *Commande kill
+ *on va utiliser la fonction de la libc kill
+ */
 int killShell (char** arg){
+  if(arg[1]==NULL){
+    perror("pas de parammetre");
+    return -1;
+  }
   int ret;
-  int c = 2;
   if (arg[1][0]!= '-'){
-    ret = kill (atoi(arg[1]),SIGTERM);
+    int c = 1;
+    while (arg[c]!=NULL){
+    ret = kill (atoi(arg[1]),SIGTERM);// cas par default sans signal passé en parametre
     verifier(ret!=-1, "kill");
+    c++;
+    }
   }
   else{
-    char *sign = arg[1]+1;
+    char *sign = arg[1]+1; // on récupére le premiere parametre sans le "-"
     int x = atoi (sign);
-    printf("%d",x);
+    int c=2;
     while (arg[c]!=NULL){
-      ret = kill(atoi(arg[c]),x);
+      ret = kill(atoi(arg[c]),x); //et on lance le signal
       verifier(ret!=-1, "kill");
-      c=c+1;
+      c++;
     }
   }
   return ret;
 }
 
 
-/* Commande qui affiche l'historique du shell. On peut l'appeler avec un argument
-   pour obtenir l'historique des n dernières commandes */
+/*
+ * Commande qui affiche l'historique du shell. On peut l'appeler avec un argument
+ * pour obtenir l'historique des n dernières commandes 
+ */
 
 int history(char ** arg) {
-  HIST_ENTRY ** hystory_list = history_list ();                        // on crée une variable contenant l'historique
+  HIST_ENTRY ** hystory_list = history_list ();                       // on crée une variable contenant l'historique
   int treshold = history_length;
-  if (arg[1] != NULL && atoi(arg[1]) <= history_length) {              // si il y a un argument, et qu'il est inférieur au nombre d'éléments de l'historique
+  if (arg[1] != NULL && atoi(arg[1]) <= history_length) {             // si il y a un argument, et qu'il est inférieur au nombre d'éléments de l'historique
     treshold = atoi(arg[1]);
   }
-  for (int i = history_length - treshold; i < history_length; i++) {
-    printf ("%d: %s\n", i + history_base, hystory_list[i]->line);      // on affiche les n derniers rangs de l'historique 
+  for (int i = history_length - treshold; i < history_length; i++) {  // on affiche les n derniers rangs de l'historique 
+    printf ("%d: %s\n", i + history_base, hystory_list[i]->line);
   }
   return 0;
 }
-
-    
-
-
