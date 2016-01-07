@@ -4,9 +4,9 @@ Commandes Externes
 ++élimination des zombies 10
 
 Expressions
-+expression ; expression 0
-+expression || expression 0
-+expression && expression 0
++expression ; expression 10
++expression || expression 10
++expression && expression 10
 ++( expression ) 0
 ++expression | expression 0
 ++expression > fichier 0
