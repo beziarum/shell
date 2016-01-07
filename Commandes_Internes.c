@@ -21,6 +21,7 @@ int date(char** arg);
 int echo(char** arg);
 int cd(char** arg);
 int pwd(char **);
+int my_exit(char ** arg);
 int hostname(char **);
 
 typedef struct assoc {
@@ -32,7 +33,8 @@ assoc tab_cmd_intern[] = {{"date", date},
 			  {"echo", echo},
 			  {"cd", cd},
 			{"pwd" ,pwd},
-			{"hostname", hostname}};
+			  {"hostname", hostname},
+			  {"exit", my_exit}};
 
 int (*get_intern (char* name)) (char**)
 {
@@ -92,6 +94,13 @@ int hostname(char ** arg) {
   gethostname(hostname, 500);
   printf("Hostname : %s\n", hostname);
   return 0;
+}
+
+int my_exit(char ** arg) {
+  if (arg + 1 == NULL) 
+    exit(atoi(arg[1]));
+  else
+    exit(0);
 }
 
 
