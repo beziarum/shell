@@ -101,7 +101,7 @@ int hostname(char ** arg) {
 }
 
 int my_exit(char ** arg) {
-  if (arg + 1 != NULL) 
+  if (arg[1] != NULL) 
     exit(atoi(arg[1]));
   else
     exit(0);
@@ -130,11 +130,15 @@ int killShell (char** arg){
 
 int history(char ** arg) {
   HIST_ENTRY ** hystory_list = history_list ();
-  if (hystory_list) {
-    for (int i = 0; i<history_length; i++) {
-      printf ("%d: %s\n", i + history_base, hystory_list[i]->line);
-    }
+  int treshold = history_length;
+  int length = history_length;
+  if (arg[1] != NULL && atoi(arg[1]) <= length) {
+    treshold = atoi(arg[1]);
   }
+  for (int i = length - treshold; i<length; i++) {
+    printf ("%d: %s\n", i + history_base, hystory_list[i]->line);
+  }
+  return 0;
 }
 
     
