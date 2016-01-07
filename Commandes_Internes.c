@@ -108,9 +108,11 @@ int my_exit(char ** arg) {
 
 int history(char ** arg) {
   HIST_ENTRY ** hystory_list = history_list ();
-  if (hystory_list)
-    for (int i = 0; *history_list + i; i++)
+  if (hystory_list) {
+    for (int i = 0; i<history_length; i++) {
       printf ("%d: %s\n", i + history_base, hystory_list[i]->line);
+    }
+  }
 }
 
     
