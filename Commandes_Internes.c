@@ -7,22 +7,23 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
+#include <signal.h>
 
 void verifier(int b,char* m)
 {
     if(!b)
-    {
 	perror(m);
-	exit(EXIT_FAILURE);
-    }
 }
 
 int date(char** arg);
 int echo(char** arg);
 int cd(char** arg);
-int pwd(char **);
 int my_exit(char ** arg);
 int hostname(char **);
+int pwd(char ** arg);
+int hostname(char ** arg);
+int killShell(char** arg);
+
 
 typedef struct assoc {
     char* name;
@@ -32,9 +33,11 @@ typedef struct assoc {
 assoc tab_cmd_intern[] = {{"date", date},
 			  {"echo", echo},
 			  {"cd", cd},
-			{"pwd" ,pwd},
 			  {"hostname", hostname},
-			  {"exit", my_exit}};
+			  {"exit", my_exit},
+			  {"pwd" ,pwd},
+			  {"hostname", hostname},
+			  {"kill",killShell}};
 
 int (*get_intern (char* name)) (char**)
 {
@@ -103,4 +106,23 @@ int my_exit(char ** arg) {
     exit(0);
 }
 
+int killShell (char** arg){
+  int ret;
+  int c = 2;
+  if (arg[1][0]!= '-'){
+    ret = kill (atoi(arg[1]),SIGTERM);
+    verifier(ret!=-1, "kill");
+  }
+  else{
+    char *sign = arg[1]+1;
+    int x = atoi (sign);
+    printf("%d",x);
+    while (arg[c]!=NULL){
+      ret = kill(atoi(arg[c]),x);
+      verifier(ret!=-1, "kill");
+      c=c+1;
+    }
+  }
+  return ret;
+}
 
