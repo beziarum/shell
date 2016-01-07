@@ -89,6 +89,7 @@ int date(char** param){
   return 0;
 }
 
+
 /*
  *Commande cd
  */
@@ -106,8 +107,9 @@ int cd (char** arg){
 }
 
 
-/* Commande qui affiche le répertoire courant */
-
+/* 
+ * Commande qui affiche le répertoire courant
+ */
 int pwd(char ** arg) {
   char pwd[500];
   getcwd(pwd, sizeof(pwd));
@@ -116,8 +118,9 @@ int pwd(char ** arg) {
 }
 
 
-/* Commande qui affiche le nom de l'hote local */
-
+/*
+ * Commande qui affiche le nom de l'hote local
+ */
 int hostname(char ** arg) {
   char hostname[HOST_NAME_MAX +1];
   gethostname(hostname,sizeof(hostname));
@@ -126,7 +129,9 @@ int hostname(char ** arg) {
 }
 
 
-/* Commande permettant que quitter le shell */
+/*
+ * Commande permettant que quitter le shell
+ */
 
 int my_exit(char ** arg) {
   if (arg[1] != NULL)         // si il y a un argument
@@ -168,8 +173,10 @@ int killShell (char** arg){
 }
 
 
-/* Commande qui affiche l'historique du shell. On peut l'appeler avec un argument
-   pour obtenir l'historique des n dernières commandes */
+/*
+ * Commande qui affiche l'historique du shell. On peut l'appeler avec un argument
+ * pour obtenir l'historique des n dernières commandes 
+ */
 
 int history(char ** arg) {
   HIST_ENTRY ** hystory_list = history_list ();                       // on crée une variable contenant l'historique
