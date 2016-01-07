@@ -10,7 +10,7 @@
 #include <signal.h>
 #include <readline/history.h>
 #include <limits.h>
-
+#include <errno.h>
 /*
  *Déclaration des commandes
  */
@@ -147,6 +147,7 @@ int my_exit(char ** arg) {
  */
 int killShell (char** arg){
   if(arg[1]==NULL){
+    errno=EINVAL;
     perror("pas de parammetre");
     return -1;
   }
