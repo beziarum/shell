@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <signal.h>
+#include <readline/history.h>
 
 void verifier(int b,char* m)
 {
@@ -23,7 +24,7 @@ int hostname(char **);
 int pwd(char ** arg);
 int hostname(char ** arg);
 int killShell(char** arg);
-
+int history(char **);
 
 typedef struct assoc {
     char* name;
@@ -37,7 +38,8 @@ assoc tab_cmd_intern[] = {{"date", date},
 			  {"exit", my_exit},
 			  {"pwd" ,pwd},
 			  {"hostname", hostname},
-			  {"kill",killShell}};
+			  {"kill",killShell},
+			  {"history", history}};
 
 int (*get_intern (char* name)) (char**)
 {
@@ -105,6 +107,7 @@ int my_exit(char ** arg) {
     exit(0);
 }
 
+
 int killShell (char** arg){
   int ret;
   int c = 2;
@@ -124,4 +127,16 @@ int killShell (char** arg){
   }
   return ret;
 }
+
+int history(char ** arg) {
+  HIST_ENTRY ** hystory_list = history_list ();
+  if (hystory_list) {
+    for (int i = 0; i<history_length; i++) {
+      printf ("%d: %s\n", i + history_base, hystory_list[i]->line);
+    }
+  }
+}
+
+    
+
 
