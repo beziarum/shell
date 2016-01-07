@@ -39,26 +39,26 @@ int expr_bg (Expression* e, Contexte* c)
 
 int expr_simple (Expression* e, Contexte* c)
 {
-    pid_t pid=fork();
-    if(pid==0)
+    int (*intern)(char**)=get_intern(e->arguments[0]);
+    if(intern!=NULL)
+	return intern(e->arguments);
+    else
     {
-	int (*intern)(char**)=get_intern(e->arguments[0]);
-	if(intern!=NULL)
-	    exit(intern(e->arguments));
-	else
+	pid_t pid=fork();
+	if(pid==0)
 	{
 	    execvp(e->arguments[0],e->arguments);
 	    perror(e->arguments[0]);
 	    exit(1);
 	}
-    }
-    else
-    {
-	if (c->bg)
-	    return 0;
-	int status;
-	waitpid(pid,&status,0);
-	return WIFEXITED(status) ? WEXITSTATUS(status) : WTERMSIG(status);
+	else
+	{
+	    if (c->bg)
+		return 0;
+	    int status;
+	    waitpid(pid,&status,0);
+	    return WIFEXITED(status) ? WEXITSTATUS(status) : WTERMSIG(status);
+	}
     }
 }
 
