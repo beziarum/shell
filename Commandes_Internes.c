@@ -131,11 +131,10 @@ int killShell (char** arg){
 int history(char ** arg) {
   HIST_ENTRY ** hystory_list = history_list ();
   int treshold = history_length;
-  int length = history_length;
-  if (arg[1] != NULL && atoi(arg[1]) <= length) {
+  if (arg[1] != NULL && atoi(arg[1]) <= history_length) {
     treshold = atoi(arg[1]);
   }
-  for (int i = length - treshold; i<length; i++) {
+  for (int i = history_length - treshold; i < history_length; i++) {
     printf ("%d: %s\n", i + history_base, hystory_list[i]->line);
   }
   return 0;
