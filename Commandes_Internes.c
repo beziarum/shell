@@ -101,7 +101,7 @@ int hostname(char ** arg) {
 }
 
 int my_exit(char ** arg) {
-  if (arg + 1 == NULL) 
+  if (arg + 1 != NULL) 
     exit(atoi(arg[1]));
   else
     exit(0);
