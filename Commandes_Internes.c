@@ -132,7 +132,6 @@ int hostname(char ** arg) {
 /*
  * Commande permettant que quitter le shell
  */
-
 int my_exit(char ** arg) {
   if (arg[1] != NULL)         // si il y a un argument
     exit(atoi(arg[1]));       // on quitte le shell en renvoyant la valeur de l'agument
@@ -179,6 +178,10 @@ int killShell (char** arg){
  */
 
 int history(char ** arg) {
+  if (arg[2] != NULL) {
+    perror("trop d'arguments, history admet 0 ou 1 argument");
+    return -1;
+  }
   HIST_ENTRY ** hystory_list = history_list ();                       // on crée une variable contenant l'historique
   int treshold = history_length;
   if (arg[1] != NULL && atoi(arg[1]) <= history_length) {             // si il y a un argument, et qu'il est inférieur au nombre d'éléments de l'historique
