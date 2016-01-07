@@ -180,6 +180,7 @@ int killShell (char** arg){
 
 int history(char ** arg) {
   if (arg[2] != NULL) {
+    errno=EINVAL;
     perror("trop d'arguments, history admet 0 ou 1 argument");
     return -1;
   }
