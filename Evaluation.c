@@ -8,6 +8,8 @@
 int expr_simple(Expression* e, Contexte* c);
 int expr_bg(Expression* e, Contexte* c);
 int expr_sequence(Expression* e, Contexte* c);
+int expr_sequence_et(Expression* e, Contexte* c);
+int expr_sequence_ou(Expression* e, Contexte* c);
 
 typedef struct assoc {
     expr_t expr;
@@ -16,7 +18,9 @@ typedef struct assoc {
 
 assoc tab_expr[] = {{SIMPLE, expr_simple},
 		    {BG, expr_bg},
-		    {SEQUENCE, expr_sequence}};
+		    {SEQUENCE, expr_sequence},
+		    {SEQUENCE_ET, expr_sequence_et},
+		    {SEQUENCE_OU, expr_sequence_ou}};
 
 int expr_not_implemented (Expression* e, Contexte* c)
 {
@@ -39,27 +43,45 @@ int expr_bg (Expression* e, Contexte* c)
 
 int expr_simple (Expression* e, Contexte* c)
 {
-    pid_t pid=fork();
-    if(pid==0)
+    int (*intern)(char**)=get_intern(e->arguments[0]);
+    if(intern!=NULL)
+	return intern(e->arguments);
+    else
     {
-	int (*intern)(char**)=get_intern(e->arguments[0]);
-	if(intern!=NULL)
-	    exit(intern(e->arguments));
-	else
+	pid_t pid=fork();
+	if(pid==0)
 	{
 	    execvp(e->arguments[0],e->arguments);
 	    perror(e->arguments[0]);
 	    exit(1);
 	}
+	else
+	{
+	    if (c->bg)
+		return 0;
+	    int status;
+	    waitpid(pid,&status,0);
+	    return WIFEXITED(status) ? WEXITSTATUS(status) : WTERMSIG(status);
+	}
     }
+}
+
+int expr_sequence_et (Expression* e, Contexte* c)
+{
+    int ret=get_expr(e->gauche->type)(e->gauche, c);
+    if(ret != 0)
+	return ret;
     else
-    {
-	if (c->bg)
-	    return 0;
-	int status;
-	waitpid(pid,&status,0);
-	return WIFEXITED(status) ? WEXITSTATUS(status) : WTERMSIG(status);
-    }
+	return get_expr(e->droite->type)(e->droite, c);
+}
+
+int expr_sequence_ou (Expression* e, Contexte* c)
+{
+    int ret=get_expr(e->gauche->type)(e->gauche, c);
+    if(ret == 0)
+	return ret;
+    else
+	return get_expr(e->droite->type)(e->droite, c);
 }
 
 int (*get_expr (expr_t expr)) (Expression*, Contexte*)

@@ -20,8 +20,8 @@ void verifier(int b,char* m)
 int date(char** arg);
 int echo(char** arg);
 int cd(char** arg);
-int pwd();
-int hostname();
+int pwd(char **);
+int hostname(char **);
 
 typedef struct assoc {
     char* name;
@@ -32,8 +32,7 @@ assoc tab_cmd_intern[] = {{"date", date},
 			  {"echo", echo},
 			  {"cd", cd},
 			{"pwd" ,pwd},
-			{"hostname", hostname}}
-};
+			{"hostname", hostname}};
 
 int (*get_intern (char* name)) (char**)
 {
@@ -81,14 +80,14 @@ int cd (char** arg){
   return r;
 }
 
-int pwd() {
+int pwd(char ** arg) {
   char pwd[500];
   getcwd(pwd, sizeof(pwd));
   printf("%s\n", pwd);
   return 0;
 }
 
-int hostname() {
+int hostname(char ** arg) {
   char hostname[500];
   gethostname(hostname, 500);
   printf("Hostname : %s\n", hostname);
