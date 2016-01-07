@@ -20,11 +20,11 @@ int date(char** arg);
 int echo(char** arg);
 int cd(char** arg);
 int my_exit(char ** arg);
-int hostname(char **);
+int hostname(char ** arg);
 int pwd(char ** arg);
 int hostname(char ** arg);
 int killShell(char** arg);
-int history(char **);
+int history(char ** arg);
 
 typedef struct assoc {
     char* name;
@@ -86,6 +86,9 @@ int cd (char** arg){
   return r;
 }
 
+
+/* Commande qui affiche le répertoire courant */
+
 int pwd(char ** arg) {
   char pwd[500];
   getcwd(pwd, sizeof(pwd));
@@ -93,6 +96,9 @@ int pwd(char ** arg) {
   return 0;
 }
 
+
+/* Commande qui affiche le nom de l'hote local */
+ 
 int hostname(char ** arg) {
   char hostname[500];
   gethostname(hostname, 500);
@@ -100,9 +106,12 @@ int hostname(char ** arg) {
   return 0;
 }
 
+
+/* Commande permettant que quitter le shell */
+
 int my_exit(char ** arg) {
-  if (arg[1] != NULL) 
-    exit(atoi(arg[1]));
+  if (arg[1] != NULL)            // si il y a un argument
+    exit(atoi(arg[1]));          // on quitte le shell en renvoyant la valeur de l'agument
   else
     exit(0);
 }
@@ -128,14 +137,18 @@ int killShell (char** arg){
   return ret;
 }
 
+
+/* Commande qui affiche l'historique du shell. On peut l'appeler avec un argument
+   pour obtenir l'historique des n dernières commandes */
+
 int history(char ** arg) {
-  HIST_ENTRY ** hystory_list = history_list ();
+  HIST_ENTRY ** hystory_list = history_list ();                        // on crée une variable contenant l'historique
   int treshold = history_length;
-  if (arg[1] != NULL && atoi(arg[1]) <= history_length) {
+  if (arg[1] != NULL && atoi(arg[1]) <= history_length) {              // si il y a un argument, et qu'il est inférieur au nombre d'éléments de l'historique
     treshold = atoi(arg[1]);
   }
   for (int i = history_length - treshold; i < history_length; i++) {
-    printf ("%d: %s\n", i + history_base, hystory_list[i]->line);
+    printf ("%d: %s\n", i + history_base, hystory_list[i]->line);      // on affiche les n derniers rangs de l'historique 
   }
   return 0;
 }
