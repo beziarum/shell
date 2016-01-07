@@ -44,13 +44,12 @@ int (*get_intern (char* name)) (char**)
 }
 
 int echo(char** param){
-  char ptr;
   int c=1;
-  while (c>=1){
-    c=fread(&ptr,1,c,stdin);
-    fwrite(&ptr,1,c,stdout);
-
+  while (param[c]!=NULL){
+    printf("%s ",param[c]);
+    c++;
   }
+  printf("\n");
   return 0;
 }
 
