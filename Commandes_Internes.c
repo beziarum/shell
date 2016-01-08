@@ -202,8 +202,8 @@ int history(char ** arg)
   HIST_ENTRY ** hystory_list = history_list ();                       // on crée une variable contenant l'historique
   int treshold = history_length;
   if (arg[1] != NULL && atoi(arg[1]) <= history_length)               // si il y a un argument, et qu'il est inférieur au nombre d'éléments de l'historique
-    treshold = atoi(arg[1]);
-  for (int i = history_length - treshold; i < history_length; i++)    // on affiche les n derniers rangs de l'historique 
+    treshold = atoi(arg[1]) +1;
+  for (int i = history_length - treshold; i < history_length; i++)    // on affiche les n derniers rangs de l'historique (sans compter la commande history qu'on vient de lancer)
     printf ("%d: %s\n", i + history_base, hystory_list[i]->line);
   return 0;
 }
