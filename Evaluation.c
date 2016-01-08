@@ -183,7 +183,7 @@ void appliquer_contexte(Contexte* c,bool save)
 	    tmp=dup(STDOUT_FILENO);
 	dup2(c->fdout,STDOUT_FILENO);
 	if(save)
-	    c->fdin=tmp;
+	    c->fdout=tmp;
 	else
 	    close(c->fdout);
     }
