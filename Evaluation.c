@@ -101,10 +101,15 @@ int (*get_expr (expr_t expr)) (Expression*, Contexte*)
     return expr_not_implemented;
 }
 
+int initaliser_contexte(Contexte* c)
+{
+    c->bg=false;
+}
+
 int
 evaluer_expr(Expression *e)
 {
     Contexte* c=malloc(sizeof(Contexte));
-    c->bg=false;
+    initaliser_contexte(c);
     return get_expr(e->type)(e,c);
 }
