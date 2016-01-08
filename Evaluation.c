@@ -12,6 +12,8 @@ int expr_sequence_et(Expression* e, Contexte* c);
 int expr_sequence_ou(Expression* e, Contexte* c);
 int expr_sous_shell(Expression* e,Contexte* c);
 
+int expr_vide(Expression* e, Contexte* c);
+
 typedef struct assoc {
     expr_t expr;
     int (*data) (Expression*,Contexte*);
@@ -22,13 +24,18 @@ assoc tab_expr[] = {{SIMPLE, expr_simple},
 		    {SEQUENCE, expr_sequence},
 		    {SEQUENCE_ET, expr_sequence_et},
 		    {SEQUENCE_OU, expr_sequence_ou},
-		    {SOUS_SHELL, expr_sous_shell}};
+		    {SOUS_SHELL, expr_sous_shell},
+		    {VIDE, expr_vide}};
 
 int expr_not_implemented (Expression* e, Contexte* c)
 {
     fprintf(stderr,"fonctionnalité non implémentée\n");
     
     return 1;
+}
+
+int expr_vide(Expression* e, Contexte* c){
+  return EXIT_SUCCESS;
 }
 
 int expr_sequence(Expression* e, Contexte* c)
