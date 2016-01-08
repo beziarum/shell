@@ -68,12 +68,20 @@ int (*get_intern (char* name)) (char**)
  */
 int echo(char ** arg)
 {
+  
   int c=1;
   while (arg[c]!=NULL)
-  {
-    printf("%s ",arg[c]);    // on affiche simplement ces parametres sur la sortie standard
-    c++;
-  }
+    {
+      if (arg[c][0]=='$'){
+	char *tmp=arg[c]+1;
+	printf("%s ",getenv(tmp));
+	c++;
+      }
+      else{
+	printf("%s ",arg[c]);    // on affiche simplement ces parametres sur la sortie standard
+	c++;
+      }
+    }
   printf("\n");
   return 0;
 }
