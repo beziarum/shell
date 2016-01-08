@@ -228,15 +228,17 @@ my_yyparse(void)
 int
 main (int argc, char **argv) 
 {
-  // faire en sorte qu'interactive_mode = 0 lorsque le shell est distant 
+  // faire en sorte qu'interactive_mode = 0 lorsque le shell est distant
+
+  if (argv[1]=='remote')
+    interactive_mode=0;
   
   if (interactive_mode)
     {
       using_history();
     }
   else
-    {
-      //  mode distant 
+    { 
     }
   
   while (1){
