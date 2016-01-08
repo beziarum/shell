@@ -13,6 +13,8 @@ int expr_sequence_ou(Expression* e, Contexte* c);
 int expr_sous_shell(Expression* e,Contexte* c);
 int expr_redirection_o(Expression* e,Contexte* c);
 int expr_redirection_in(Expression* e,Contexte* c);
+int expr_vide(Expression* e, Contexte* c);
+
 
 void appliquer_contexte(Contexte* c, bool save);
 
@@ -28,13 +30,18 @@ assoc tab_expr[] = {{SIMPLE, expr_simple},
 		    {SEQUENCE_OU, expr_sequence_ou},
 		    {REDIRECTION_I, expr_redirection_in},
 		    {REDIRECTION_O, expr_redirection_o},
-		    {SOUS_SHELL, expr_sous_shell}};
+		    {SOUS_SHELL, expr_sous_shell},
+			{VIDE, expr_vide}};
 
 int expr_not_implemented (Expression* e, Contexte* c)
 {
     fprintf(stderr,"fonctionnalité non implémentée\n");
     
     return 1;
+}
+
+int expr_vide(Expression* e, Contexte* c){
+  return EXIT_SUCCESS;
 }
 
 int expr_sequence(Expression* e, Contexte* c)
@@ -47,11 +54,6 @@ int expr_bg (Expression* e, Contexte* c)
 {
     c->bg=true;
     return get_expr(e->gauche->type)(e->gauche, c);
-}
-
-void swapfd(int fd1, int fd2)
-{
-    int tmpfd=fd1;
 }
 
 int expr_simple (Expression* e, Contexte* c)
