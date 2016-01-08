@@ -1,5 +1,5 @@
 #include <sys/wait.h>
-
+#include <fcntl.h>
 #include "Shell.h"
 #include "Evaluation.h"
 #include "Commandes_Internes.h"
@@ -11,6 +11,10 @@ int expr_sequence(Expression* e, Contexte* c);
 int expr_sequence_et(Expression* e, Contexte* c);
 int expr_sequence_ou(Expression* e, Contexte* c);
 int expr_sous_shell(Expression* e,Contexte* c);
+int expr_redirection_o(Expression* e,Contexte* c);
+int expr_redirection_in(Expression* e,Contexte* c);
+
+void appliquer_contexte(Contexte* c, bool save);
 
 typedef struct assoc {
     expr_t expr;
@@ -22,6 +26,8 @@ assoc tab_expr[] = {{SIMPLE, expr_simple},
 		    {SEQUENCE, expr_sequence},
 		    {SEQUENCE_ET, expr_sequence_et},
 		    {SEQUENCE_OU, expr_sequence_ou},
+		    {REDIRECTION_I, expr_redirection_in},
+		    {REDIRECTION_O, expr_redirection_o},
 		    {SOUS_SHELL, expr_sous_shell}};
 
 int expr_not_implemented (Expression* e, Contexte* c)
@@ -43,20 +49,30 @@ int expr_bg (Expression* e, Contexte* c)
     return get_expr(e->gauche->type)(e->gauche, c);
 }
 
+void swapfd(int fd1, int fd2)
+{
+    int tmpfd=fd1;
+}
+
 int expr_simple (Expression* e, Contexte* c)
 {
     int (*intern)(char**)=get_intern(e->arguments[0]);
-    if(intern!=NULL && c->bg!=false)
-	return intern(e->arguments);
+    if(intern!=NULL && c->bg!=true)
+    {
+	appliquer_contexte(c,true);
+	int ret=intern(e->arguments);
+	appliquer_contexte(c,false);
+	return ret;
+    }
     else
     {
 	pid_t pid=fork();
 	if(pid==0)
 	{
+	    appliquer_contexte(c,false);
 	    if(intern != NULL)
 	    {
-		intern(e->arguments);
-		return EXIT_SUCCESS;
+		return intern(e->arguments);
 	    }
 	    else
 	    {
@@ -74,6 +90,12 @@ int expr_simple (Expression* e, Contexte* c)
 	    return WIFEXITED(status) ? WEXITSTATUS(status) : WTERMSIG(status);
 	}
     }
+}	
+
+int expr_redirection_o (Expression* e, Contexte* c)
+{
+    c->fdout=open(e->arguments[0],O_WRONLY|O_CREAT|O_TRUNC,0660);
+    return get_expr(e->gauche->type)(e->gauche,c);
 }
 
 int expr_sequence_et (Expression* e, Contexte* c)
@@ -101,8 +123,8 @@ int expr_sous_shell (Expression* e, Contexte* c)
 
 int expr_redirection_in(Expression* e, Contexte* c)
 {
-  c->fdin = open(e->arguments[1]);
-  return get_expr(e->gauche->type)(e->gauche, c);
+    c->fdin = open(e->arguments[0],O_RDONLY);
+    return get_expr(e->gauche->type)(e->gauche, c);
 }
   
 
@@ -115,10 +137,39 @@ int (*get_expr (expr_t expr)) (Expression*, Contexte*)
     return expr_not_implemented;
 }
 
-int initaliser_contexte(Contexte* c)
+void initaliser_contexte(Contexte* c)
 {
     c->bg=false;
     c->fdin=STDIN_FILENO;
+    c->fdout=STDOUT_FILENO;
+}
+
+void appliquer_contexte(Contexte* c,bool save)
+{
+    if(c->fdin != STDIN_FILENO)
+    {
+	
+	int tmp;
+	if(save)
+	    tmp=dup(STDIN_FILENO);
+	dup2(c->fdin,STDIN_FILENO);
+	if(save)
+	    c->fdin=tmp;
+	else
+	    close(c->fdin);
+	
+    }
+    if(c->fdout != STDOUT_FILENO)
+    {
+	int tmp;
+	if(save)
+	    tmp=dup(STDOUT_FILENO);
+	dup2(c->fdout,STDOUT_FILENO);
+	if(save)
+	    c->fdin=tmp;
+	else
+	    close(c->fdout);
+    }
 }
 
 int

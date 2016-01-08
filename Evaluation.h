@@ -7,10 +7,11 @@
 
 typedef struct Contexte {
     bool bg;
-  int fdin;
+    int fdin;
+    int fdout;
 } Contexte;
 
-extern int initaliser_contexte(Contexte* c);
+extern void initaliser_contexte(Contexte* c);
 extern int (*get_expr (expr_t e))(Expression*, Contexte*);
 extern int evaluer_expr(Expression *e);
 
