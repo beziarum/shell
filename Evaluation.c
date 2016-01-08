@@ -98,6 +98,12 @@ int expr_sous_shell (Expression* e, Contexte* c)
 {
   return get_expr(e->gauche->type)(e->gauche, c);
 }
+
+int expr_redirection_in(Expression* e, Contexte* c)
+{
+  c->stdin = open(e->arguments[1]);
+  return get_expr(e->gauche->type)(e->gauche, c);
+}
   
 
 int (*get_expr (expr_t expr)) (Expression*, Contexte*)
@@ -112,6 +118,7 @@ int (*get_expr (expr_t expr)) (Expression*, Contexte*)
 int initaliser_contexte(Contexte* c)
 {
     c->bg=false;
+    c->stdin=STDIN_FILENO;
 }
 
 int
