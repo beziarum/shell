@@ -44,16 +44,24 @@ int expr_bg (Expression* e, Contexte* c)
 int expr_simple (Expression* e, Contexte* c)
 {
     int (*intern)(char**)=get_intern(e->arguments[0]);
-    if(intern!=NULL)
+    if(intern!=NULL && c->bg!=false)
 	return intern(e->arguments);
     else
     {
 	pid_t pid=fork();
 	if(pid==0)
 	{
-	    execvp(e->arguments[0],e->arguments);
-	    perror(e->arguments[0]);
-	    exit(1);
+	    if(intern != NULL)
+	    {
+		intern(e->arguments);
+		return EXIT_SUCCESS;
+	    }
+	    else
+	    {
+		execvp(e->arguments[0],e->arguments);
+		perror(e->arguments[0]);
+		exit(1);
+	    }
 	}
 	else
 	{
