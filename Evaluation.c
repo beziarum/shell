@@ -14,7 +14,7 @@ int expr_sous_shell(Expression* e,Contexte* c);
 int expr_redirection_o(Expression* e,Contexte* c);
 int expr_redirection_in(Expression* e,Contexte* c);
 
-void appliquer_contexte(Contexte* c);
+void appliquer_contexte(Contexte* c, bool save);
 
 typedef struct assoc {
     expr_t expr;
@@ -59,15 +59,17 @@ int expr_simple (Expression* e, Contexte* c)
     int (*intern)(char**)=get_intern(e->arguments[0]);
     if(intern!=NULL && c->bg!=true)
     {
-	appliquer_contexte(c);
-	return intern(e->arguments);
+	appliquer_contexte(c,true);
+	int ret=intern(e->arguments);
+	appliquer_contexte(c,false);
+	return ret;
     }
     else
     {
 	pid_t pid=fork();
 	if(pid==0)
 	{
-	    appliquer_contexte(c);
+	    appliquer_contexte(c,false);
 	    if(intern != NULL)
 	    {
 		return intern(e->arguments);
@@ -142,24 +144,31 @@ void initaliser_contexte(Contexte* c)
     c->fdout=STDOUT_FILENO;
 }
 
-void appliquer_contexte(Contexte* c)
+void appliquer_contexte(Contexte* c,bool save)
 {
     if(c->fdin != STDIN_FILENO)
     {
 	
 	int tmp;
-	if(c->bg)
+	if(save)
 	    tmp=dup(STDIN_FILENO);
 	dup2(c->fdin,STDIN_FILENO);
-	if(c->bg)
+	if(save)
 	    c->fdin=tmp;
 	else
-	close(c->fdin);
+	    close(c->fdin);
+	
     }
     if(c->fdout != STDOUT_FILENO)
     {
+	int tmp;
+	if(save)
+	    tmp=dup(STDOUT_FILENO);
 	dup2(c->fdout,STDOUT_FILENO);
-	close(c->fdout);
+	if(save)
+	    c->fdin=tmp;
+	else
+	    close(c->fdout);
     }
 }
 
