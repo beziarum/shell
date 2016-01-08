@@ -10,6 +10,7 @@ int expr_bg(Expression* e, Contexte* c);
 int expr_sequence(Expression* e, Contexte* c);
 int expr_sequence_et(Expression* e, Contexte* c);
 int expr_sequence_ou(Expression* e, Contexte* c);
+int expr_sous_shell(Expression* e,Contexte* c);
 
 typedef struct assoc {
     expr_t expr;
@@ -20,7 +21,8 @@ assoc tab_expr[] = {{SIMPLE, expr_simple},
 		    {BG, expr_bg},
 		    {SEQUENCE, expr_sequence},
 		    {SEQUENCE_ET, expr_sequence_et},
-		    {SEQUENCE_OU, expr_sequence_ou}};
+		    {SEQUENCE_OU, expr_sequence_ou},
+		    {SOUS_SHELL, expr_sous_shell}};
 
 int expr_not_implemented (Expression* e, Contexte* c)
 {
@@ -83,6 +85,12 @@ int expr_sequence_ou (Expression* e, Contexte* c)
     else
 	return get_expr(e->droite->type)(e->droite, c);
 }
+
+int expr_sous_shell (Expression* e, Contexte* c)
+{
+  return get_expr(e->gauche->type)(e->gauche, c);
+}
+  
 
 int (*get_expr (expr_t expr)) (Expression*, Contexte*)
 {
