@@ -92,6 +92,11 @@ int expr_simple (Expression* e, Contexte* c)
     }
 }	
 
+int expr_pipe(Expression* e, Contexte* c)
+{
+    
+}
+
 int expr_redirection_o (Expression* e, Contexte* c)
 {
     c->fdout=open(e->arguments[0],O_WRONLY|O_CREAT|O_TRUNC,0660);
@@ -137,11 +142,21 @@ int (*get_expr (expr_t expr)) (Expression*, Contexte*)
     return expr_not_implemented;
 }
 
-void initaliser_contexte(Contexte* c)
+void initialiser_contexte(Contexte* c)
 {
     c->bg=false;
     c->fdin=STDIN_FILENO;
     c->fdout=STDOUT_FILENO;
+}
+
+/*
+ *copie c1 dans c2
+ */
+void copier_contexte(Contexte* c1, Contexte* c2)
+{
+    c2->bg=c1->bg;
+    c2->fdin=c1->fdin;
+    c2->fdout=c1->fdout;
 }
 
 void appliquer_contexte(Contexte* c,bool save)
@@ -176,6 +191,6 @@ int
 evaluer_expr(Expression *e)
 {
     Contexte* c=malloc(sizeof(Contexte));
-    initaliser_contexte(c);
+    initialiser_contexte(c);
     return get_expr(e->type)(e,c);
 }
