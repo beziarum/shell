@@ -126,7 +126,7 @@ int printPwd()
 {
   char pwd[512];                   
   getcwd(pwd, sizeof(pwd));
-   printf ("\x1b[33m%s \x1b[0m", pwd);
+  printf ("\x1b[33m%s \x1b[0m", pwd);
   return 0;
 }
   
