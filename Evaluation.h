@@ -7,7 +7,7 @@
 
 typedef struct Contexte {
     bool bg;
-  int ftdin;
+  int fdin;
 } Contexte;
 
 extern int initaliser_contexte(Contexte* c);
