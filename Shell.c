@@ -9,6 +9,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <sys/wait.h>
+
 extern int yyparse_string(char *);
 
  bool interactive_mode = 1; // par défaut on utilise readline 
@@ -87,7 +88,7 @@ char **AjouterArg (char **Liste, char *Arg)
 void EndOfFile (void)
 {
     printf("\n");
-  exit (0);
+    exit (0);
 } /* EndOfFile */
 
 /*
@@ -123,9 +124,9 @@ expression_free(Expression *e)
 
 int printPwd() 
 {
-  char pwd[512];                   // peut être à améliorer
+  char pwd[512];                   
   getcwd(pwd, sizeof(pwd));
-  printf("%s", pwd);
+   printf ("\x1b[33m%s \x1b[0m", pwd);
   return 0;
 }
   
@@ -226,10 +227,9 @@ my_yyparse(void)
 
 
 int
-main (int argc, char **argv) 
+main (int argc, char **argv)
 {
   // faire en sorte qu'interactive_mode = 0 lorsque le shell est distant 
-  
   if (interactive_mode)
     {
       using_history();
