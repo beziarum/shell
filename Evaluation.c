@@ -14,6 +14,7 @@ int expr_sous_shell(Expression* e,Contexte* c);
 int expr_redirection_o(Expression* e,Contexte* c);
 int expr_redirection_in(Expression* e,Contexte* c);
 int expr_vide(Expression* e, Contexte* c);
+int expr_redirection_er(Expression* e, Contexte* c);
 
 
 void appliquer_contexte(Contexte* c, bool save);
@@ -31,7 +32,9 @@ assoc tab_expr[] = {{SIMPLE, expr_simple},
 		    {REDIRECTION_I, expr_redirection_in},
 		    {REDIRECTION_O, expr_redirection_o},
 		    {SOUS_SHELL, expr_sous_shell},
-			{VIDE, expr_vide}};
+		    {VIDE, expr_vide},
+		    {REDIRECTION_E, expr_redirection_er}};
+
 
 int expr_not_implemented (Expression* e, Contexte* c)
 {
@@ -134,6 +137,12 @@ int expr_redirection_in(Expression* e, Contexte* c)
     return get_expr(e->gauche->type)(e->gauche, c);
 }
   
+int expr_redirection_er(Expression* e, Contexte* c)
+{
+  c->fderr = open(e->arguments[0],O_WRONLY|O_CREAT|O_TRUNC,0660);
+  return get_expr(e->gauche->type)(e->gauche, c);
+}
+  
 
 int (*get_expr (expr_t expr)) (Expression*, Contexte*)
 {
@@ -149,6 +158,7 @@ void initialiser_contexte(Contexte* c)
     c->bg=false;
     c->fdin=STDIN_FILENO;
     c->fdout=STDOUT_FILENO;
+    c->fderr=STDERR_FILENO;
 }
 
 /*
@@ -159,14 +169,14 @@ void copier_contexte(Contexte* c1, Contexte* c2)
     c2->bg=c1->bg;
     c2->fdin=c1->fdin;
     c2->fdout=c1->fdout;
+    c2->fderr=c1->fderr;
 }
 
 void appliquer_contexte(Contexte* c,bool save)
 {
-    if(c->fdin != STDIN_FILENO)
+  int tmp;
+  if(c->fdin != STDIN_FILENO)
     {
-	
-	int tmp;
 	if(save)
 	    tmp=dup(STDIN_FILENO);
 	dup2(c->fdin,STDIN_FILENO);
@@ -178,7 +188,6 @@ void appliquer_contexte(Contexte* c,bool save)
     }
     if(c->fdout != STDOUT_FILENO)
     {
-	int tmp;
 	if(save)
 	    tmp=dup(STDOUT_FILENO);
 	dup2(c->fdout,STDOUT_FILENO);
@@ -187,6 +196,16 @@ void appliquer_contexte(Contexte* c,bool save)
 	else
 	    close(c->fdout);
     }
+    if(c->fderr != STDERR_FILENO)
+      {
+	if(save)
+	  tmp=dup(STDERR_FILENO);
+	dup2(c->fderr,STDERR_FILENO);
+	if(save)
+	   c->fderr=tmp;
+	else
+	  close(c->fderr);
+      }
 }
 
 int

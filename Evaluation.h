@@ -9,6 +9,7 @@ typedef struct Contexte {
     bool bg;
     int fdin;
     int fdout;
+  int fderr;
 } Contexte;
 
 extern void initialiser_contexte(Contexte* c);
