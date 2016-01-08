@@ -121,6 +121,15 @@ expression_free(Expression *e)
   free(e);
 }
 
+int printPwd() 
+{
+  char pwd[512];                   // peut être à améliorer
+  getcwd(pwd, sizeof(pwd));
+  printf("%s", pwd);
+  return 0;
+}
+  
+
 
 /*
  * Lecture de la ligne de commande à l'aide de readline en mode interactif
@@ -135,7 +144,8 @@ my_yyparse(void)
     {
       char *line = NULL;
       char buffer[1024];
-      snprintf(buffer, 1024, "mini_shell(%d):", status);
+      printPwd();
+      snprintf(buffer, 1024, "(%d):", status);
       line = readline(buffer);
       if(line != NULL)
 	{
@@ -218,7 +228,6 @@ my_yyparse(void)
 int
 main (int argc, char **argv) 
 {
-
   // faire en sorte qu'interactive_mode = 0 lorsque le shell est distant 
   
   if (interactive_mode)
@@ -231,7 +240,7 @@ main (int argc, char **argv)
     }
   
   while (1){
-    if (my_yyparse () == 0) {  /* L'analyse a abouti */   
+    if (my_yyparse () == 0) {  /* L'analyse a abouti */
       afficher_expr(ExpressionAnalysee);
       fflush(stdout);
       status = evaluer_expr(ExpressionAnalysee);
