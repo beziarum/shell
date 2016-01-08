@@ -117,7 +117,7 @@ int cd (char ** arg)
  */
 int pwd(char ** arg) 
 {
-  char pwd[500];
+  char pwd[512];                   // peut être à améliorer
   getcwd(pwd, sizeof(pwd));
   printf("%s\n", pwd);
   return 0;
