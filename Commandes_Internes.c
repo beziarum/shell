@@ -220,6 +220,13 @@ int history(char ** arg)
 
 //partie remote
 
+typedef struct remote_machine {   // structure représentant une machine distante
+    char* name;
+    int fd;
+} remote_machine;
+
+remote_machine tab_machines[];
+
 int remote_localhost(char** param);
 
 assoc tab_remote[] = {{"localhost", remote_localhost}};
