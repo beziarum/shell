@@ -20,6 +20,7 @@ int expr_redirection_er(Expression* e, Contexte* c);
 
 
 void appliquer_contexte(Contexte* c, bool save);
+void swapfd(int* fdnew, int fdorigin, bool save);
 
 typedef struct assoc {
     expr_t expr;
