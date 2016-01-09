@@ -54,32 +54,32 @@ fonctionnalité.
 \newpage
 \section{Commande interne}
 
-Dans cette partie nous avons du implémenter directement le comportement de quelque
-commande dans notre shell. Ces commandes n'etais pas trés dur a implémenter. La plupart
-du temps il suffisait de trouver le bon appel systeme à utilisé. A noter tout de meme
-que nous n'avons implémenté que les fonctionnalités de base offerte par ces commandes, nous
-ne nous somme pas amusé a ajouter la gestion de tout les parametres ce qui aurait 
+Dans cette partie nous avons du implémenter directement le comportement de quelques
+commandes dans notre shell. Ces commandes n'etaient pas trés difficiles à implémenter. La plupart
+du temps il suffisait de trouver le bon appél systeme à utilisé. A noter tout de même
+que nous n'avons implémenté que les fonctionnalités de base offertes par ces commandes, nous
+ne nous sommes pas amusés à ajouter la gestion de tout les paramètres, ce qui aurait 
 représenté un travail trés fastidieux.
 
 \subsection{Fonction}
 \subsubsection{echo}
- La commande echo n'est rien d'autre qu'une fonction qui écrit les parametres quelle reçoit
+ La commande echo n'est rien d'autre qu'une fonction qui écrit les paramètres qu'elle reçoit
  sur la sortie standard. Un simple printf suffit pour cette commande.
  
 \subsubsection{date}
- Pour cette commande nous avons du faire quelque recherche sur les fonction fournit par time.h
- Nous avons décider de créer une structure tm et d'utiliser la fonction strftime qui
- sert justement a afficher l'heure celon son propre formt qu'on peut définir a la volé.
+ Pour cette commande nous avons du faire quelques recherches sur les fonctions fournies par time.h.
+ Nous avons décidé de créer une structure tm et d'utiliser la fonction strftime qui
+ sert justement à afficher l'heure selon son propre format qu'on peut définir à la volée.
  
  \subsubsection{cd}
- La commande cd a requis d'utiliser l'appel systeme chdir qui ouvre le repertoir passé en paramétre
- Nous avons veiller a récupéré la variable d'environement HOME avec getenv pour les cas ou cd est
- appellé sans parametres. Nous avons également tenté de prévenir d'éventuels erreurs(comme les
- repertoir non éxistant).
+ La commande cd à requis d'utiliser l'appel systeme chdir qui ouvre le repertoir passé en paramètre
+ Nous avons veillés à récupérer la variable d'environement HOME avec getenv pour les cas ou cd est
+ appellé sans paramètre. Nous avons également tenté de prévenir d'éventuels erreures(comme les
+ répertoire non existant).
  
  \subsubsection{pwd}
- Cette commande a juste besoin de recupéré le répertoire courant nous avons donc utilisé
- la fonction getcwd qui retourne ce dernier. La taille maximal du buffer acceuillent le chemin
+ Cette commande à juste besoin de recupérer le répertoire courant nous avons donc utilisé
+ la fonction getcwd qui retourne ce dernier. La taille maximale du buffer acceuillant le chemin
  du repertoire est....
  
  \subsubsection{hostname}
@@ -87,20 +87,20 @@ représenté un travail trés fastidieux.
  \subsubsection{exit}
  
  \subsubsection{kill}
- Pour la commande kill nous avons simplement utilisé l'apelle systeme kill. Notre commande
- peut gérer le parametres de choix de signal a envoyer. Il peut l'evoyer a tout les processus
- rentré en parametres.
- Pour gérer l'erreur en cas d'absence de parametres nous avons toucher directement a la valeur
- de errno la passant a EINVAL invalid argument.
+ Pour la commande kill nous avons simplement utilisé l'appel systeme kill. Notre commande
+ peut gérer le paramètre de choix de signal à envoyer. Il peut l'envoyer à tous les processus
+ rentré en paramètres.
+ Pour gérer l'erreur en cas d'absence de paramètres nous avons touchés directement à la valeure
+ de errno la passant à EINVAL (invalid argument).
  
  \subsubsection{history}
  
  \subsection{Intégration au shell}
  
- La difficulté de cette partie n'etais pas tant l'implémentation des fonctions en elle meme
- surtout le fait de rendre compatible tous se qui avait été fait avant avec ces commandes.
- En effet les commande interne n'utilise pas de fork il faut donc gérer leur comportement
- de maniére particuliére.
+ La difficultée de cette partie n'était pas tant l'implémentation des fonctions en elles mêmes,
+ mais surtout le fait de rendre compatible tout ce qui avait été fait avant avec ces commandes.
+ En effet les commandes internes n'utilisent pas de fork il faut donc gérer leurs comportements
+ de manière particulière.
 
 \newpage
 \section{Remote shell}
