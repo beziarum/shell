@@ -229,6 +229,9 @@ my_yyparse(void)
 int
 main (int argc, char **argv)
 {
+    for(int i=1; i<argc; i++)
+	if(strcmp("-r",argv[i])==0)
+	    interactive_mode=false;
   // faire en sorte qu'interactive_mode = 0 lorsque le shell est distant 
   if (interactive_mode)
     {
