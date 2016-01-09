@@ -204,51 +204,37 @@ void initialiser_contexte(Contexte* c)
  */
 void copier_contexte(Contexte* c1, Contexte* c2)
 {
-  c2->bg=c1->bg;
-  c2->fdin=c1->fdin;
-  c2->fdout=c1->fdout;
-  c2->fderr=c1->fderr;
-  c2->fdclose=c1->fdclose;
-  c2->ispipped=c1->ispipped;
-  c2->tube=c1->tube;
+    c2->bg=c1->bg;
+    c2->fdin=c1->fdin;
+    c2->fdout=c1->fdout;
+    c2->fderr=c1->fderr;
+	c2->fdclose=c1->fdclose;
+    c2->ispipped=c1->ispipped;
+    c2->tube=c1->tube;
 }
 
 void appliquer_contexte(Contexte* c,bool save)
 {
-  int tmp;
-  if(c->fdin != STDIN_FILENO)
+    swapfd(&(c->fdin),STDIN_FILENO,save);
+    swapfd(&(c->fdout),STDOUT_FILENO,save);
+    swapfd(&(c->fderr),STDERR_FILENO,save);
+    if(c->fdclose != -1)
+    	close(c->fdclose);
+}
+
+void swapfd(int* fdnew, int fdorigin, bool save)
+{
+    if(*fdnew != fdorigin)
     {
-      if(save)
-	tmp=dup(STDIN_FILENO);
-      dup2(c->fdin,STDIN_FILENO);
-      if(save)
-	c->fdin=tmp;
-      else
-	close(c->fdin);
-	
+	int tmp;
+	if(save)
+	    tmp=dup(fdorigin);
+	dup2(*fdnew,fdorigin);
+	if(save)
+	    *fdnew=tmp;
+	else
+	    close(*fdnew);
     }
-  if(c->fdout != STDOUT_FILENO)
-    {
-      if(save)
-	tmp=dup(STDOUT_FILENO);
-      dup2(c->fdout,STDOUT_FILENO);
-      if(save)
-	c->fdout=tmp;
-      else
-	close(c->fdout);
-    }
-  if(c->fderr != STDERR_FILENO)
-    {
-      if(save)
-	tmp=dup(STDERR_FILENO);
-      dup2(c->fderr,STDERR_FILENO);
-      if(save)
-	c->fderr=tmp;
-      else
-	close(c->fderr);
-    }
-  if(c->fdclose != -1)
-    close(c->fdclose);
 }
 
 int
