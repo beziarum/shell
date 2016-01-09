@@ -11,6 +11,7 @@
 #include <readline/history.h>
 #include <limits.h>
 #include <errno.h>
+#include <limits.h>
 
 /*
  * Déclaration des commandes
@@ -45,6 +46,7 @@ assoc tab_cmd_intern[] = {{"date", date},
 			  {"hostname", hostname},
 			  {"kill",killShell},
 			  {"history", history}};
+
 
 
 void verifier(int b,char* m)
@@ -125,7 +127,7 @@ int cd (char ** arg)
  */
 int pwd(char ** arg) 
 {
-  char pwd[512];                   // peut être à améliorer
+  char pwd[PATH_MAX];
   getcwd(pwd, sizeof(pwd));
   printf("%s\n", pwd);
   return 0;
@@ -209,9 +211,35 @@ int history(char ** arg)
   }
   HIST_ENTRY ** hystory_list = history_list ();                       // on crée une variable contenant l'historique
   int treshold = history_length;
-  if (arg[1] != NULL && atoi(arg[1]) < history_length)               // si il y a un argument, et qu'il est inférieur au nombre d'éléments de l'historique
+  if (arg[1] != NULL && atoi(arg[1]) < history_length)                // si il y a un argument, et qu'il est inférieur au nombre d'éléments de l'historique
     treshold = atoi(arg[1]) +1;
   for (int i = history_length - treshold; i < history_length; i++)    // on affiche les n derniers rangs de l'historique (sans compter la commande history qu'on vient de lancer)
     printf ("%d: %s\n", i + history_base, hystory_list[i]->line);
   return 0;
 }
+
+//partie remote
+
+int remote_localhost(char** param);
+
+assoc tab_remote[] = {{"localhost", remote_localhost}};
+
+int (*get_remote (char* name)) (char**) 
+{
+  int taille_tab_remote = sizeof (tab_remote)/sizeof(assoc);
+  for (int i=0; i<taille_tab_remote; i++)
+    if (strcmp(name,tab_remote[i].name)==0)
+      return tab_remote[i].data;
+  return NULL;
+}
+
+
+int remote_localhost(char** param)
+{
+    int param_size=1,i=0;
+    while(param[i]!=NULL)
+    {
+	
+    }
+}
+
