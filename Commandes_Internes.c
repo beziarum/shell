@@ -46,6 +46,12 @@ assoc tab_cmd_intern[] = {{"date", date},
 			  {"kill",killShell},
 			  {"history", history}};
 
+assoc tab_remote[] = {{"add", remote_add},
+		      {"remove", remote_remove},
+		      {"list", remote_list},
+		      {"all", remote_all}};
+
+
 
 void verifier(int b,char* m)
 {
@@ -60,6 +66,15 @@ int (*get_intern (char* name)) (char**)
   for (int i=0; i<taille_tab_cmd_intern; i++)
     if (strcmp(name,tab_cmd_intern[i].name)==0)
       return tab_cmd_intern[i].data;
+  return NULL;
+}
+
+int (*get_remote (char* name)) (char**) 
+{
+  int taille_tab_remote = sizeof (tab_remote)/sizeof(assoc);
+  for (int i=0; i<taille_tab_remote; i++)
+    if (strcmp(name,tab_remote[i].name)==0)
+      return tab_remote[i].data;
   return NULL;
 }
 
@@ -209,9 +224,14 @@ int history(char ** arg)
   }
   HIST_ENTRY ** hystory_list = history_list ();                       // on crée une variable contenant l'historique
   int treshold = history_length;
-  if (arg[1] != NULL && atoi(arg[1]) < history_length)               // si il y a un argument, et qu'il est inférieur au nombre d'éléments de l'historique
+  if (arg[1] != NULL && atoi(arg[1]) < history_length)                // si il y a un argument, et qu'il est inférieur au nombre d'éléments de l'historique
     treshold = atoi(arg[1]) +1;
   for (int i = history_length - treshold; i < history_length; i++)    // on affiche les n derniers rangs de l'historique (sans compter la commande history qu'on vient de lancer)
     printf ("%d: %s\n", i + history_base, hystory_list[i]->line);
   return 0;
 }
+
+
+
+
+
