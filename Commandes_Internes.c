@@ -259,8 +259,8 @@ int (*get_remote (char* name)) (char**)
 int remote_localhost(char** param)
 {
     char** param_remote=malloc(3*sizeof(char**));
-    param_remote[0]="./Shell";
-    param_remote[1]="-r";
+    param_remote[0]=strdup("./Shell");
+    param_remote[1]=strdup("-r");
     param_remote[2]=NULL;
     
     Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_remote);
@@ -272,9 +272,15 @@ int remote_localhost(char** param)
     c->fdin=tube[0];
     afficher_expr(e);
     int ret= get_expr(BG)(e,c);
-    //expression_free(e);
+    expression_free(e);
     free(c);
-    write(tube[1],"ls",2);
+    param+=2;
+    while(*param!=NULL)
+    {
+	write(tube[1],*param,strlen(*param));
+	write(tube[1]," ",1);
+	param++;
+    }
     write(tube[1],"\n",1);
     close(tube[1]);
     return ret;
