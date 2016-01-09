@@ -19,6 +19,7 @@ int expr_redirection_er(Expression* e, Contexte* c);
 
 
 void appliquer_contexte(Contexte* c, bool save);
+void swapfd(int* fdnew, int fdorigin, bool save);
 
 typedef struct assoc {
     expr_t expr;
@@ -207,40 +208,26 @@ void copier_contexte(Contexte* c1, Contexte* c2)
 
 void appliquer_contexte(Contexte* c,bool save)
 {
-  int tmp;
-  if(c->fdin != STDIN_FILENO)
-    {
-	if(save)
-	    tmp=dup(STDIN_FILENO);
-	dup2(c->fdin,STDIN_FILENO);
-	if(save)
-	    c->fdin=tmp;
-	else
-	    close(c->fdin);
-	
-    }
-    if(c->fdout != STDOUT_FILENO)
-    {
-	if(save)
-	    tmp=dup(STDOUT_FILENO);
-	dup2(c->fdout,STDOUT_FILENO);
-	if(save)
-	    c->fdout=tmp;
-	else
-	    close(c->fdout);
-    }
-    if(c->fderr != STDERR_FILENO)
-      {
-	if(save)
-	  tmp=dup(STDERR_FILENO);
-	dup2(c->fderr,STDERR_FILENO);
-	if(save)
-	   c->fderr=tmp;
-	else
-	  close(c->fderr);
-      }
-	    if(c->fdclose != -1)
+    swapfd(&(c->fdin),STDIN_FILENO,save);
+    swapfd(&(c->fdout),STDOUT_FILENO,save);
+    swapfd(&(c->fderr),STDERR_FILENO,save);
+    if(c->fdclose != -1)
     	close(c->fdclose);
+}
+
+void swapfd(int* fdnew, int fdorigin, bool save)
+{
+    if(*fdnew != fdorigin)
+    {
+	int tmp;
+	if(save)
+	    tmp=dup(fdorigin);
+	dup2(*fdnew,fdorigin);
+	if(save)
+	    *fdnew=tmp;
+	else
+	    close(*fdnew);
+    }
 }
 
 int
