@@ -85,7 +85,7 @@ int expr_simple (Expression* e, Contexte* c)
 	    appliquer_contexte(c,false);
 	    if(intern != NULL)
 	    {
-		return intern(e->arguments);
+		exit(intern(e->arguments));
 	    }
 	    else
 	    {
