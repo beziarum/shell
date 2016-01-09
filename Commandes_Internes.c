@@ -11,6 +11,7 @@
 #include <readline/history.h>
 #include <limits.h>
 #include <errno.h>
+#include <limits.h>
 
 /*
  * Déclaration des commandes
@@ -126,7 +127,7 @@ int cd (char ** arg)
  */
 int pwd(char ** arg) 
 {
-  char pwd[512];                   // peut être à améliorer
+  char pwd[PATH_MAX];
   getcwd(pwd, sizeof(pwd));
   printf("%s\n", pwd);
   return 0;
