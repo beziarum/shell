@@ -9,6 +9,9 @@ typedef struct Contexte {
     bool bg;
     int fdin;
     int fdout;
+    int fdclose;//file descriptor qu'il faudra fermer avant de lancer la commande, -1 si aucun
+    bool ispipped;
+    int* tube;
 } Contexte;
 
 extern void initialiser_contexte(Contexte* c);
