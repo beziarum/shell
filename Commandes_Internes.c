@@ -1,5 +1,5 @@
-#include "Commandes_Internes.h"
-
+#include "Evaluation.h"
+#include "Shell.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -24,7 +24,7 @@ int pwd(char ** arg);
 int hostname(char ** arg);
 int killShell(char ** arg);
 int history(char ** arg);
-
+int remote(char** arg);
 
 /*
  * Structure association qui fait correspondre une
@@ -44,7 +44,8 @@ assoc tab_cmd_intern[] = {{"date", date},
 			  {"pwd" ,pwd},
 			  {"hostname", hostname},
 			  {"kill",killShell},
-			  {"history", history}};
+			  {"history", history},
+			  {"remote", remote}};
 
 
 
@@ -220,8 +221,22 @@ int history(char ** arg)
 //partie remote
 
 int remote_localhost(char** param);
-
+			  
+int (*get_remote (char* name)) (char**);
+			  
 assoc tab_remote[] = {{"localhost", remote_localhost}};
+
+int remote(char** params)
+{
+    int (*cmd_remote) (char**)=get_remote(params[1]);
+    if(cmd_remote!=NULL)
+	return cmd_remote(params);
+    else
+    {
+	fprintf(stderr,"sous commande de remote inconnue (%s)\n",params[1]);
+	return 1;
+    }
+}
 
 int (*get_remote (char* name)) (char**) 
 {
@@ -235,10 +250,25 @@ int (*get_remote (char* name)) (char**)
 
 int remote_localhost(char** param)
 {
-    int param_size=1,i=0;
-    while(param[i]!=NULL)
-    {
-	
-    }
+    char** param_remote=malloc(3*sizeof(char**));
+    param_remote[0]="./Shell";
+    param_remote[1]="-r";
+    param_remote[2]=NULL;
+    
+    Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_remote);
+    e=ConstruireNoeud(BG,e,NULL,NULL);
+    Contexte* c=malloc(sizeof(Contexte));
+    initialiser_contexte(c);
+    int tube[2];
+    pipe(tube);
+    c->fdin=tube[0];
+    afficher_expr(e);
+    int ret= get_expr(BG)(e,c);
+    //expression_free(e);
+    free(c);
+    write(tube[1],"ls",2);
+    write(tube[1],"\n",1);
+    close(tube[1]);
+    return ret;
 }
 
