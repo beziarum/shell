@@ -7,11 +7,11 @@ Expressions
 +expression ; expression 10
 +expression || expression 10
 +expression && expression 10
-++( expression ) 8(a verifier que c'est bien sa quand meme)
-++expression | expression 0
-++expression > fichier 0
-++expression < fichier 0
-++expression >> fichier 0
+++( expression ) 10
+++expression | expression 10
+++expression > fichier 10
+++expression < fichier 10
+++expression >> fichier 10
 +++expressions récursives 0
 
 Commandes Internes

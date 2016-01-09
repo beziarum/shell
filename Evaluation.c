@@ -13,6 +13,7 @@ int expr_sequence_ou(Expression* e, Contexte* c);
 int expr_sous_shell(Expression* e,Contexte* c);
 int expr_redirection_o(Expression* e,Contexte* c);
 int expr_redirection_in(Expression* e,Contexte* c);
+int expr_redirection_a(Expression* e, Contexte* c);
 int expr_vide(Expression* e, Contexte* c);
 int expr_pipe(Expression* e, Contexte* c);
 int expr_redirection_er(Expression* e, Contexte* c);
@@ -32,10 +33,11 @@ assoc tab_expr[] = {{SIMPLE, expr_simple},
 		    {SEQUENCE_OU, expr_sequence_ou},
 		    {REDIRECTION_I, expr_redirection_in},
 		    {REDIRECTION_O, expr_redirection_o},
+		    {REDIRECTION_A, expr_redirection_a},
 		    {SOUS_SHELL, expr_sous_shell},
 		    {VIDE, expr_vide},
 		    {REDIRECTION_E, expr_redirection_er},
-			{PIPE, expr_pipe}};
+		    {PIPE, expr_pipe}};
 
 
 int expr_not_implemented (Expression* e, Contexte* c)
@@ -163,6 +165,12 @@ int expr_redirection_in(Expression* e, Contexte* c)
     c->fdin = open(e->arguments[0],O_RDONLY);
     return get_expr(e->gauche->type)(e->gauche, c);
 }
+
+int expr_redirection_a(Expression* e, Contexte* c)
+{
+  c->fdout = open(e->arguments[0],O_WRONLY|O_CREAT|O_APPEND,0660);
+  return get_expr(e->gauche->type)(e->gauche, c);
+}
   
 int expr_redirection_er(Expression* e, Contexte* c)
 {
@@ -182,13 +190,13 @@ int (*get_expr (expr_t expr)) (Expression*, Contexte*)
 
 void initialiser_contexte(Contexte* c)
 {
-    c->bg=false;
-    c->fdin=STDIN_FILENO;
-    c->fdout=STDOUT_FILENO;
-    c->fderr=STDERR_FILENO;
- 	c->fdclose=-1;
-    c->ispipped=false;
-    c->tube=NULL;
+  c->bg=false;
+  c->fdin=STDIN_FILENO;
+  c->fdout=STDOUT_FILENO;
+  c->fderr=STDERR_FILENO;
+  c->fdclose=-1;
+  c->ispipped=false;
+  c->tube=NULL;
 }
 
 /*
@@ -196,13 +204,13 @@ void initialiser_contexte(Contexte* c)
  */
 void copier_contexte(Contexte* c1, Contexte* c2)
 {
-    c2->bg=c1->bg;
-    c2->fdin=c1->fdin;
-    c2->fdout=c1->fdout;
-    c2->fderr=c1->fderr;
-	c2->fdclose=c1->fdclose;
-    c2->ispipped=c1->ispipped;
-    c2->tube=c1->tube;
+  c2->bg=c1->bg;
+  c2->fdin=c1->fdin;
+  c2->fdout=c1->fdout;
+  c2->fderr=c1->fderr;
+  c2->fdclose=c1->fdclose;
+  c2->ispipped=c1->ispipped;
+  c2->tube=c1->tube;
 }
 
 void appliquer_contexte(Contexte* c,bool save)
@@ -210,37 +218,37 @@ void appliquer_contexte(Contexte* c,bool save)
   int tmp;
   if(c->fdin != STDIN_FILENO)
     {
-	if(save)
-	    tmp=dup(STDIN_FILENO);
-	dup2(c->fdin,STDIN_FILENO);
-	if(save)
-	    c->fdin=tmp;
-	else
-	    close(c->fdin);
+      if(save)
+	tmp=dup(STDIN_FILENO);
+      dup2(c->fdin,STDIN_FILENO);
+      if(save)
+	c->fdin=tmp;
+      else
+	close(c->fdin);
 	
     }
-    if(c->fdout != STDOUT_FILENO)
+  if(c->fdout != STDOUT_FILENO)
     {
-	if(save)
-	    tmp=dup(STDOUT_FILENO);
-	dup2(c->fdout,STDOUT_FILENO);
-	if(save)
-	    c->fdout=tmp;
-	else
-	    close(c->fdout);
+      if(save)
+	tmp=dup(STDOUT_FILENO);
+      dup2(c->fdout,STDOUT_FILENO);
+      if(save)
+	c->fdout=tmp;
+      else
+	close(c->fdout);
     }
-    if(c->fderr != STDERR_FILENO)
-      {
-	if(save)
-	  tmp=dup(STDERR_FILENO);
-	dup2(c->fderr,STDERR_FILENO);
-	if(save)
-	   c->fderr=tmp;
-	else
-	  close(c->fderr);
-      }
-	    if(c->fdclose != -1)
-    	close(c->fdclose);
+  if(c->fderr != STDERR_FILENO)
+    {
+      if(save)
+	tmp=dup(STDERR_FILENO);
+      dup2(c->fderr,STDERR_FILENO);
+      if(save)
+	c->fderr=tmp;
+      else
+	close(c->fderr);
+    }
+  if(c->fdclose != -1)
+    close(c->fdclose);
 }
 
 int
