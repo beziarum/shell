@@ -22,64 +22,66 @@
 \newpage
 \section{Présentation}
 
-L'objectif de ce projet étais d'implémenter un shell capable d'interpréter les expression de base
-utilisable avec bash et d'éxétcuter des procéssus. En réalité une bonne partie du code du shell
-nous été deja fournit. Tout l'aspect de l'analyse syntaxique été déja implémenté dans les fichier
-donné dans le sujet.\newline
+L'objectif de ce projet était d'implémenter un Shell capable d'interpréter les expressions de base
+utilisable avec bash et d'exécuter des processus. En réalité, une bonne partie du code du Shell
+nous était déjà fourni. Tout l'aspect de l'analyse syntaxique était déjà implémenté dans les fichiers
+donnés dans le sujet.\newline
 
-On peut diviser le travail à effectuer en 4 partie qui sont:
+On peut diviser le travail à effectuer en 4 parties qui sont:
 \begin{itemize}
- \item Implémenter la possibilité pour notre shell d'éxécuter des
- commande externe ou des progrmme en tout genre n'appartenant pas au shell
- \item Donner au shell la capacité d'interpréter les expression courante
- utilisable sous bash, comme les redirections ou les pipes
- \item Ecrire un certain nombre de commande interne (des fonctions appartennant
- au shell en lui meme) tout en faisant attention à les rendre utilisable avec
- les expressions précédement cité
- \item L'implémentation d'une commande interne "remote" qui nous permetra d'éxécuter
- et controler des shells distants en utilisant ssh.\newline 
+ \item Implémenter la possibilité pour notre Shell d'exécuter des
+ commandes externes ou des programmes en tout genre n'appartenant pas au Shell
+ \item Donner au Shell la capacité d'interpréter les expressions courantes
+ utilisables sous bash, comme les redirections ou les pipes
+ \item Écrire un certain nombre de commandes interne (des fonctions appartenant
+ au Shell en lui-même) tout en faisant attention à les rendre utilisables avec
+ les expressions précédemment citées.
+ \item L'implémentation d'une commande interne "remote" qui nous permettra d'exécuter
+ et contrôler des shells distants en utilisant ssh.\newline 
 \end{itemize}
 
-Nous verrons au travers de ce rapport comment nous avons choisit d'implémenter ces différentes
-fonctionnalité.
+Nous verrons au travers de ce rapport comment nous avons choisi d'implémenter ces différentes
+fonctionnalités.
 
 \newpage
+
 \section{Commande externe}
  
- Le début de ce projet avait deja été bien entammé en tp. Nous nous somme donc
- inspiré de se qui avait été fait en classe. Nous avons créer une structure contexte
- qui contiendra a therme tout les elements dont nous auront besoin. 
+ Le début de ce projet avait déjà été bien entamé en tp. Nous nous sommes donc
+ inspirés de ce qui avait été fait en classe. Nous avons créé une structure "contexte"
+ qui contiendra à terme tous les éléments dont nous aurons besoin. 
  
- Ensuite nous avons implémenté une deuxieme structure assoc qui posséde un champ expr\_t
- et un pointeur de fonction reliant le type d'expréssion a la fonction de traitement
+ Ensuite, nous avons implémenté une deuxième structure "assoc" qui possède un champ "expr\_t"
+ et un pointeur de fonction reliant le type d'expression a la fonction de traitement
  qui lui est associé.
  
- Pour finir nous avons créer la fonction get\_expr qui retourne la fonction associé au 
- type de l'éxpréssion et l'appel en lui passant les parametres de l'éxpréssion et son 
+ Pour finir, nous avons créé la fonction "get\_expr" qui retourne la fonction associée au 
+ type de l'expression et l'appel en lui passant les paramètres de l'expression et son 
  contexte.
  
- Ce travail préparatoire permettra de rendre beaucoup plus aisé la suite du développement
+ Ce travail préparatoire permettra de rendre beaucoup plus aisée la suite du développement
  du projet
  
- En effetl ne nous restait alors plus qu'a implémenté une fonction pour intégré le comportement
- de chaque expréssion.
+ En effet ne nous restait alors plus qu'à implémenter une fonction pour intégrer le comportement
+ de chaque expression.
  
- \subsection{Commande simple en avant plan}
+ \subsection{Commande simple en avant-plan}
  
- L'éxécution de commande simple en avant plan est implémenté avec un simple fork().
- On récupére les arguments de la commande rentré et on fait un execvp de cette commande
- avec ces parametres du coté de fils. Pendant ce temps le pere attend la fin de l'éxécution
- et récupére la valeur de retour de son fils.
+ L'exécution de commande simple en avant plan est implémentée avec un simple fork().
+ On récupère les arguments de la commande rentrée et l'on fait un "execvp" de cette commande
+ avec ces paramètres du côté de fils. Pendant ce temps le père attend la fin de l'exécution
+ et récupère la valeur de retour de son fils.
  
- \subsection{Commande simple en arriére plan}
+ \subsection{Commande simple en arrière plan}
  
- Pour traité des commendes en arriére plan nous avons rajouter un champs background
- a notre structure contexte qui passe a true si le caratere \& est interprété.
- Ensuite il suffit de dire que dans se contexte on lance le fork() mais on attend pas
- fin de l'éxécution du fils.
+ Pour traiter des commandes en arrière-plan, nous avons rajouté un champ "background"
+à notre structure contexte qui passe à vraie si le caractère \& est interprété.
+ Ensuite, il suffit de dire que dans ce contexte on lance le fork() mais on n’attend pas
+la fin de l'exécution du fils.
  
  
- \subsection{Elimination des zombies}
+ \subsection{Élimination des zombies}
+
  
  
  
@@ -87,116 +89,119 @@ fonctionnalité.
 \newpage
 \section{Expression}
 
-Dans cette partie, le travail consiste a implémenté l'interprétation d'expression courante
-normalement utilisable avec bash tel que les redirection ">" ou les pipes "|".
-En réalité ces expréssion sont déja reconnu par le shell il ne nous reste plus qu'a utilisé
-nos structure pour relié chaque expréssion a son comportement spécifique et d'implémenté le
+Dans cette partie, le travail consiste à implémenter l'interprétation d'expression courante
+normalement utilisable avec bash tel que les redirections ">" ou les pipes "|".
+En réalité, ces expressions sont déjà reconnues par le Shell. Il ne nous reste plus qu'à utiliser
+nos structures pour relier chaque expression à son comportement spécifique et d'implémenter le
 dit comportement.
 
-Comme expliquer plus haut le gros travail préparatoire que nous avons éffectuer nous perméttra
-de traité avec une relative simplicité cette partie. En effet il nous suffira la plupart du temps 
-d'exploité l'arborescence deja implémenté dans le sujet, ainsi que nos structure, pour concevoir
-les différents comportement
+Comme expliquer plus haut le gros travail préparatoire que nous avons effectué nous permettra
+de traiter avec une relative simplicité cette partie. En effet, il nous suffira la plupart du temps 
+d'exploiter l'arborescence déjà implémentée dans le sujet, ainsi que nos structures, pour concevoir
+les différents comportements.
 
 \subsection{Les séquences}
 
-Une expréssion séquenciel consiste a exécuté la commande de gauche puis celle de droite.
-Il nous suffit donc d'appeler dans l'ordre avec notre fonction get\_expr le fils gauche puis le fils
-droit de notre expréssion ";"
+Une expression séquentielle consiste à exécuter la commande de gauche puis celle de droite.
+Il nous suffit donc d'appeler dans l'ordre avec notre fonction "get\_expr" le fils gauche puis le fils
+droit de notre expression ";".
 
 \subsection{les expressions booleene}
 
-Nous avons suivit le meme principe pour les expression booleene. On apelle le fils gauche puis
+Nous avons suivi le même principe pour les expressions booléennes. On appelle le fils gauche puis
 le fils droit de l'expression.
-A la diférence que le fils droit n'est appelé que si la commande gauche a bien été éxécuter dans le
-cas du "et".Et le fils droit n'est appelé que en cas d'échec du fils gauche dans le cas du "ou"
+À la différence que le fils droit n'est appelé que si la commande gauche à bien était exécuté dans le
+cas du "et".Et le fils droit n'est appelé qu’en cas d'échec du fils gauche dans le cas du "ou"
 
-\subsection{Les sous expréssions}
+\subsection{Les sous-expressions}
 
-Il s'agit sans doute de l'éxpréssion la plus simple a gerer. Il suffit d'appeler le fils
+Il s'agit sans doute de l'expression la plus simple à gérer. Il suffit d'appeler le fils
 gauche de l'expression. La gestion de l'arborescence fera le reste.
 
 \subsection{Les redirections}
 
-Pour gérer les redirections nous avons rajouter dans notre structure contexte des descripteur
-de fichier correspondant au entré et sortie standard des processus. Il nous suffit ensuite 
-d'ouvrir le fichier passé en prametre sur les bon descripteur et d'appeler la commande.
-Les entré et sortie seront ensuite remis a zero par notre fonction swapfd.
+Pour gérer les redirections, nous avons rajouté dans notre structure contexte des descripteurs
+de fichier correspondant aux entrées et sortie standard des processus. Il nous suffit ensuite 
+d'ouvrir le fichier passé en paramètre sur les bons descripteurs et d'appeler la commande.
+Les entrées et sorties seront ensuite remises à zéro par notre fonction "swapfd".
 
 \subsection{Les pipes}
 
-\subsection{Les expréssions recursives}
+\subsection{Les expressions récursives}
+
 
 
 \newpage
 \section{Commande interne}
 
-Dans cette partie nous avons du implémenter directement le comportement de quelques
-commandes dans notre shell. Ces commandes n'etaient pas trés difficiles à implémenter. La plupart
-du temps il suffisait de trouver le bon appél systeme à utilisé. A noter tout de même
+Dans cette partie, nous avons dû implémenter directement le comportement de quelques
+commandes dans notre Shell. Ces commandes n'étaient pas très difficiles à implémenter. La plupart
+du temps, il suffisait de trouver le bon appel système à utiliser. À noter tout de même
 que nous n'avons implémenté que les fonctionnalités de base offertes par ces commandes, nous
-ne nous sommes pas amusés à ajouter la gestion de tout les paramètres, ce qui aurait 
-représenté un travail trés fastidieux.
+ne nous sommes pas amusés à ajouter la gestion de tous les paramètres, ce qui aurait 
+représenté un travail très fastidieux.
 
 \subsection{Fonction}
 \subsubsection{echo}
- La commande echo n'est rien d'autre qu'une fonction qui écrit les paramètres qu'elle reçoit
+ La commande "echo" n'est rien d'autre qu'une fonction qui écrit les paramètres qu'elle reçoit
  sur la sortie standard. Un simple printf suffit pour cette commande.
  
 \subsubsection{date}
- Pour cette commande nous avons du faire quelques recherches sur les fonctions fournies par time.h.
- Nous avons décidé de créer une structure tm et d'utiliser la fonction strftime qui
+ Pour cette commande, nous avons dû faire quelques recherches sur les fonctions fournies par la librairie "time".
+ Nous avons décidé de créer une structure "tm" et d'utiliser la fonction "strftime" qui
  sert justement à afficher l'heure selon son propre format qu'on peut définir à la volée.
  
  \subsubsection{cd}
- La commande cd à requis d'utiliser l'appel systeme chdir qui ouvre le repertoir passé en paramètre
- Nous avons veillés à récupérer la variable d'environement HOME avec getenv pour les cas ou cd est
- appellé sans paramètre. Nous avons également tenté de prévenir d'éventuels erreures(comme les
- répertoire non existant).
+ La commande "cd" a requis d'utiliser l'appel système "chdir" qui ouvre le répertoire passé en paramètre
+ Nous avons veillé à récupérer la variable d'environnement "HOME" avec getenv pour les cas ou "cd" est
+ appelé sans paramètre. Nous avons également tenté de prévenir d'éventuelles erreurs(comme les
+ répertoires non existants).
  
  \subsubsection{pwd}
  Cette commande appelle la fonction getcwd qui copie le chemin absolu du répertoire 
  courant dans un buffer.
- Le buffer est initialisé avec la taille PATH\_MAX, qui est une maccro du fichier limites.h,
+ Le buffer est initialisé avec la taille PATH\_MAX, qui est une macro du fichier limites.h,
  et qui correspond à la taille maximale d'un chemin. Il suffit ensuite d'afficher le buffer.
  
  \subsubsection{hostname}
  Cette fonction a été implémentée d'une manière semblable à la fonction PWD.
 Tout d'abord, nous avons du récupérer le nom de l'hôte local grâce à l'appel système gethostname, qui copie ce nom dans un buffer. 
-La taille du buffer est initialisée à l'aide de la maccro HOST\_NAME\_MAX qui correspond à la taille maximale d'un nom de localhost. 
+La taille du buffer est initialisée à l'aide de la macro HOST\_NAME\_MAX qui correspond à la taille maximale d'un nom de localhost. 
 On affiche ensuite ce dernier.
  
  \subsubsection{exit}
- La commande exit permet de quitter le shell. 
+ La commande exit permet de quitter le Shell. 
  Elle peut être exécutée avec ou sans paramètres. 
- S'il n'y a pas de paramètre, on ferme le shell en renvoyant la valeur 0. 
+ S'il n'y a pas de paramètre, on ferme le Shell en renvoyant la valeur 0. 
  Sinon, on ferme le Shell en renvoyant la valeur entière du premier paramètre. Il est donc inutile de donner plusieurs paramètres à cette commande.
  
  \subsubsection{kill}
- Pour la commande kill nous avons simplement utilisé l'appel systeme kill. 
+ Pour la commande kill nous avons simplement utilisé l'appel système kill. 
  Notre commande peut gérer le paramètre de choix de signal à envoyer. Il peut l'envoyer à tous les processus
- rentré en paramètres.
- Pour gérer l'erreur en cas d'absence de paramètres nous avons touchés directement à la valeure
+ rentrés en paramètres.
+ Pour gérer l'erreur en cas d'absence de paramètres nous avons touché directement à la valeur
  de errno la passant à EINVAL (invalid argument).
  
  \subsubsection{history}
  La commande history renvoie l'historique des commandes entrées par l'utilisateur. 
- Elle nécessite la gestion d'un historique dans le shell. 
+ Elle nécessite la gestion d'un historique dans le Shell. 
  Pour cela il a fallu inclure le fichier history.h permettant d'utiliser un historique. 
  Pour ce faire, on appelle dans un premier temps la fonction using\_history dans le main avant la boucle principale. Ainsi on pourra utiliser les fonctions de gestions d'historique. 
- A chaque fois qu'une fonction est exécutée, elle est ajoutée à l'historique grâce à la fonction add\_history. 
- Ensuite, notre fonction history récupère la liste des fonctions appelées, et les affiche une par une. 
+ À chaque fois qu'une fonction est exécutée, elle est ajoutée à l'historique grâce à la fonction add\_history. 
+ Ensuite, notre fonction history récupère la liste des fonctions appelées, et les affiches une par une. 
  On peut également exécuter la commande avec un argument n, pour afficher uniquement les n dernières commandes.
  
- \subsection{Intégration au shell}
+ \subsection{Intégration au Shell}
  
- La difficultée de cette partie n'était pas tant l'implémentation des fonctions en elles mêmes,
+ La difficulté de cette partie n'était pas tant l'implémentation des fonctions en elles mêmes,
  mais surtout le fait de rendre compatible tout ce qui avait été fait avant avec ces commandes.
  En effet les commandes internes n'utilisent pas de fork il faut donc gérer leurs comportements
  de manière particulière.
+ ......................paul
 
 \newpage
-\section{Remote shell}
+\section{Remote Shell}
+
 
 
 \newpage
