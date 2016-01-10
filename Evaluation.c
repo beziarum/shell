@@ -29,6 +29,7 @@ typedef struct assoc {
 
 pid_t lpid=0;
 
+/* Tableau permettant d'associer un type d'expréssion avec la fonction qui la traite */
 assoc tab_expr[] = {{SIMPLE, expr_simple},
 		    {BG, expr_bg},
 		    {SEQUENCE, expr_sequence},
@@ -42,7 +43,9 @@ assoc tab_expr[] = {{SIMPLE, expr_simple},
 		    {REDIRECTION_E, expr_redirection_er},
 		    {PIPE, expr_pipe}};
 
-
+/* 
+ * Fonction permettant de ne pas provoquer d'erreur lorsque qu'on essaye d'exécuter une commande non implémentée 
+ */
 int expr_not_implemented (Expression* e, Contexte* c)
 {
     fprintf(stderr,"fonctionnalité non implémentée\n");
@@ -50,6 +53,9 @@ int expr_not_implemented (Expression* e, Contexte* c)
     return 1;
 }
 
+/* 
+ * Fonction traitant l'expression vide. Rien ne se passe. 
+ */
 int expr_vide(Expression* e, Contexte* c){
   return EXIT_SUCCESS;
 }
@@ -60,6 +66,9 @@ int expr_sequence(Expression* e, Contexte* c)
     return get_expr(e->droite->type)(e->droite, c);
 }
 
+/*
+ * Fonction traitant les expressions en arrière plan.
+ */
 int expr_bg (Expression* e, Contexte* c)
 {
     c->bg=true;
