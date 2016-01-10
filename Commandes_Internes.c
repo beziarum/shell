@@ -349,7 +349,10 @@ int remote_remove(char ** param)
 int remote_list(char ** param)
 {
   if (nb_machine == 0)
-    printf("Il n'y a actuellement aucune machine dans la liste des machines distantes connectées.\nUtilisez remote add pour ajouter des machines.");
+  {
+    fprintf(stderr,"Il n'y a actuellement aucune machine dans la liste des machines distantes connectées.\nUtilisez remote add pour ajouter des machines.");
+    return EXIT_FAILURE;
+  }
   else 
     for (int i=0; i<nb_machine; i++)
       printf("%s\n", tab_machines[i]->name);
@@ -371,7 +374,7 @@ int remote_cmd_simple(char** param)
     if (!lmachine) 
     {
       fprintf(stderr,"aucune machine de ce nom n'est présente dans la liste.\nUtilisez remote list pour obtenir la liste");
-      return(EXIT_FAILURE);
+      return EXIT_FAILURE;
     }
     param++;
     while(*param!=NULL)
@@ -383,3 +386,22 @@ int remote_cmd_simple(char** param)
     write(lmachine->fd,"\n",1);
     return EXIT_SUCCESS;
 }
+
+int remote_all(char ** param) 
+{
+  if (nb_machine == 0)
+  {
+    fprintf(stderr,"Il n'y a actuellement aucune machine dans la liste des machines distantes connectées.\nUtilisez remote add pour ajouter des machines.");
+    return EXIT_SUCCESS;
+  }
+  char * tmp = param[1];
+  for (int i=0; i<nb_machine; i++)           // pour chaque machine, on exécute cmd_simple avec le nom de la machine et les parametres
+  {
+    param[1] = tab_machines[i]->name;         // le premier paramètre correspond au nom de la machine           
+    remote_cmd_simple(param);                 // on appelle ensuite cmd_simple avec le nom de la machine et la liste de paramètres.
+  }
+  param[1] = tmp;
+  return EXIT_SUCCESS;
+}
+				  
+
