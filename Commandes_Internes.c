@@ -315,11 +315,17 @@ int remote_localhost(char** param)
 
 int remote_add(char** param)
 {
-    int nb_add_machines=0;
-    param+=2;                               //on saute le «remote» et le «add»
+    param+=2;                               // on saute le «remote» et le «add»
     int i=0;
+    int alreadyInList=0;
     while(param[i] != NULL){
-	nb_add_machines++;
+      for (int j=0; j<nb_machine; j++) {
+	if (strcmp(param[i],tab_machines[j]->name)==0) {
+	  alreadyInList=1;
+	}
+      } 
+      if (alreadyInList == 0) {
+	//nb_add_machines++;
 	remote_machine* rm=malloc(sizeof(remote_machine));
 	rm->name=strdup(param[i]);
 	if(i+nb_machine>=tab_length){
@@ -329,10 +335,13 @@ int remote_add(char** param)
 		tab_length*=2;
 	    tab_machines=realloc(tab_machines,sizeof(remote_machine*)*tab_length);
 	}
-	tab_machines[i+nb_machine] = rm;
-	i++;
+	tab_machines[nb_machine] = rm;
+	nb_machine++;
+      }
+      alreadyInList=0;
+      i++;
     }
-    nb_machine+=nb_add_machines;
+    printf("%d", nb_machine);
     return EXIT_SUCCESS;
 }
 
