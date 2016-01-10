@@ -112,12 +112,12 @@ int cd (char ** arg)
   if (arg[1]==NULL)
   {
     r = chdir(getenv("HOME"));                                       // cas d'un retour au home cd sans paramètre
-    verifier(r!=-1,"erreur dans la variable d'environement HOME");
+    verifier(r!=-1,"cd");
   }
   else
   {
     r = chdir(arg[1]);                                               // cas classique : on apelle juste chdir avec le nom du dossier
-    verifier(r!=-1, "Aucun fichier ou dossier de ce type");
+    verifier(r!=-1, "cd");
   }
   return r;
 }
@@ -168,7 +168,7 @@ int killShell (char ** arg)
   if(arg[1]==NULL)
   {
     errno=EINVAL;
-    perror("pas de paramètre");
+    perror("kill");
     return -1;
   }
   int ret;
@@ -207,7 +207,7 @@ int history(char ** arg)
   if (arg[2] != NULL)
   {
     errno=EINVAL;
-    perror("trop d'arguments, history admet 0 ou 1 argument");
+    perror("history");
     return -1;
   }
   HIST_ENTRY ** hystory_list = history_list ();                       // on crée une variable contenant l'historique
