@@ -330,28 +330,6 @@ int remote_add(char** param)
 	tab_machines[i+nb_machine] = rm;
 	i++;
     }
-    /*for(int i=0;i<nb_add_machines;i++){
-
-	char** param_ssh=malloc(4*sizeof(char**));
-	param_ssh[0]=strdup("ssh");
-	param_ssh[1]=strdup(tab_machines[i]->name);
-	param_ssh[2]=strdup("./Shell -r");
-	param_ssh[3]=NULL;
-
-	Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_ssh);
-	e=ConstruireNoeud(BG,e,NULL,NULL);
-	Contexte* c=malloc(sizeof(Contexte));
-	initialiser_contexte(c);
-	int tube[2];
-	pipe(tube);
-	c->fdin=tube[0];
-	c->fdclose=tube[1];
-	tab_machines[nb_machine+i]->fd=tube[1];
-	afficher_expr(e);
-	int ret= get_expr(BG)(e,c);
-	//expression_free(e);
-	free(c);
-	}*/
     nb_machine+=nb_add_machines;
     return 0;
 }
@@ -391,7 +369,6 @@ int remote_list(char ** param)
  */
 int remote_cmd_simple(char** param)
 {
-    fprintf(stderr,"%s %s %s\n",param[0],param[1],param[2]);
     remote_machine* lmachine=NULL;
     param++;
     for(int i=0;i<nb_machine;i++)
@@ -420,15 +397,19 @@ int remote_cmd_simple(char** param)
     while(*param!=NULL)
 	param_echo=AjouterArg(param_echo,*(param++));
     
-    
-    
+    char** param_xcat=InitialiserListeArguments();
+    param_xcat=AjouterArg(param_xcat,"./xcat.sh");
+    param_xcat=AjouterArg(param_xcat,"-hold");
+    param_xcat=AjouterArg(param_xcat,"-T");
+    param_xcat=AjouterArg(param_xcat,lmachine->name);
     
     Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_ssh);
     Expression* echo=ConstruireNoeud(SIMPLE,NULL,NULL,param_echo);
+    Expression* xcat=ConstruireNoeud(SIMPLE,NULL,NULL,param_xcat);
     e=ConstruireNoeud(PIPE,echo,e,NULL);
+    e=ConstruireNoeud(PIPE,e,xcat,NULL);
     Contexte* c=malloc(sizeof(Contexte));
     initialiser_contexte(c);
-    afficher_expr(e);
     int ret= get_expr(PIPE)(e,c);
     expression_free(e);
     free(c);
