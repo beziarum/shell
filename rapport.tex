@@ -94,13 +94,14 @@ représenté un travail trés fastidieux.
  répertoire non existant).
  
  \subsubsection{pwd}
- Cette commande à juste besoin de recupérer le répertoire courant nous avons donc utilisé
- la fonction getcwd qui retourne ce dernier. La taille maximale du buffer acceuillant le chemin
- du repertoire est....
+ Cette commande appelle la fonction getcwd qui copie le chemin absolu du répertoire courant dans un buffer.  Le buffer est initialisé avec la taille PATH_MAX, qui est une maccro du fichier limites.h, et qui correspond à la taille maximale d'un chemin. Il suffit ensuite d'afficher le buffer.
  
  \subsubsection{hostname}
+ Cette fonction a été implémentée d'une manière semblable à la fonction PWD.
+Tout d'abord, nous avons du récupérer le nom de l'hôte local grâce à l'appel système gethostname, qui copie ce nom dans un buffer. La taille du buffer est initialisée à l'aide de la maccro HOST_NAME_MAX qui correspond à la taille maximale d'un nom de localhost. On affiche ensuite ce dernier.
  
  \subsubsection{exit}
+ La commande exit permet de quitter le shell. Elle peut être exécutée avec ou sans paramètres. S'il n'y a pas de paramètre, on ferme le shell en renvoyant la valeur 0. Sinon, on ferme le Shell en renvoyant la valeur entière du premier paramètre. Il est donc inutile de donner plusieurs paramètres à cette commande.
  
  \subsubsection{kill}
  Pour la commande kill nous avons simplement utilisé l'appel systeme kill. Notre commande
@@ -110,6 +111,7 @@ représenté un travail trés fastidieux.
  de errno la passant à EINVAL (invalid argument).
  
  \subsubsection{history}
+ La commande history renvoie l'historique des commandes entrées par l'utilisateur. Elle nécessite la gestion d'un historique dans le shell. Pour cela il a fallu inclure le fichier history.h permettant d'utiliser un historique. Pour ce faire, on appelle dans un premier temps la fonction using\_history dans le main avant la boucle principale. Ainsi on pourra utiliser les fonctions de gestions d'historique. A chaque fois qu'une fonction est exécutée, elle est ajoutée à l'historique grâce à la fonction add\_history. Ensuite, notre fonction history récupère la liste des fonctions appelées, et les affiche une par une. On peut également exécuter la commande avec un argument n, pour afficher uniquement les n dernières commandes.
  
  \subsection{Intégration au shell}
  
