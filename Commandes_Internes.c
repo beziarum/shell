@@ -226,8 +226,8 @@ typedef struct remote_machine {   // structure représentant une machine distant
     int fd;
 } remote_machine;
 
-remote_machine **tab_machines;
-int tab_length =10;
+remote_machine **tab_machines={NULL};
+int tab_length =1;
 int nb_machine=0;
 
 int remote_localhost(char** param);
@@ -299,20 +299,20 @@ int remote_localhost(char** param)
 
 int remote_add(char** param)
 {
-  tab_machines=malloc(10*sizeof(remote_machine*));
-  
-  int i=1;
+    int nb_add_machines=0;
+  int i=0;
   while(param[i] != NULL){
+    nb_add_machines++;
+    i++;
     remote_machine  rm;
     rm.name=strdup(param[i]);
-    if(i>tab_length){
-      tab_machines=realloc(tab_machines,sizeof(remote_machine*)*(tab_length*2));
+    if(i+nb_machine>=tab_length){
       tab_length*=2;
+      tab_machines=realloc(tab_machines,sizeof(remote_machine*)*tab_length);
     }
-    nb_machine++;
-    tab_machines[i] = &rm;
+    tab_machines[i+nb_machine] = &rm;
   }
-  for(int i=0;i<nb_machine;i++){
+  for(int i=0;i<nb_add_machines;i++){
 
     char** param_ssh=malloc(4*sizeof(char**));
     param_ssh[0]=strdup("./ssh");
