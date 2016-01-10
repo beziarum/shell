@@ -1,5 +1,6 @@
 #include "Evaluation.h"
 #include "Shell.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -222,7 +223,6 @@ int history(char ** arg)
 
 typedef struct remote_machine {   // structure représentant une machine distante
     char* name;
-    int fd;
 } remote_machine;
 
 remote_machine **tab_machines=NULL;
@@ -315,7 +315,7 @@ int remote_add(char** param)
 	tab_machines[i+nb_machine] = rm;
 	i++;
     }
-    for(int i=0;i<nb_add_machines;i++){
+    /*for(int i=0;i<nb_add_machines;i++){
 
 	char** param_ssh=malloc(4*sizeof(char**));
 	param_ssh[0]=strdup("ssh");
@@ -336,7 +336,7 @@ int remote_add(char** param)
 	int ret= get_expr(BG)(e,c);
 	//expression_free(e);
 	free(c);
-    }
+	}*/
     nb_machine+=nb_add_machines;
     return 0;
 }
@@ -346,9 +346,10 @@ int remote_remove(char ** param)
 {
   for (int i=0; tab_machines[i]; i++) 
   {
-    close(tab_machines[i]->fd);
+    free(tab_machines[i]->name);
     free(tab_machines[i]);
   }
+  nb_machine=0;
   return 0;
 }
 
@@ -384,13 +385,30 @@ int remote_cmd_simple(char** param)
       return EXIT_FAILURE;
     }
     param++;
+    
+    
+    char** param_ssh=InitialiserListeArguments();
+    param_ssh=AjouterArg(param_ssh,"ssh");
+    param_ssh=AjouterArg(param_ssh,lmachine->name);
+    param_ssh=AjouterArg(param_ssh,"./Shell -r");
+
+    char** param_echo=InitialiserListeArguments();
+    param_echo=AjouterArg(param_echo,"echo");
     while(*param!=NULL)
-    {
-	write(lmachine->fd,*param,strlen(*param));
-	write(lmachine->fd," ",1);
-	param++;
-    }
-    write(lmachine->fd,"\n",1);
+	param_echo=AjouterArg(param_echo,*(param++));
+    
+	
+    
+    
+    Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_ssh);
+    Expression* echo=ConstruireNoeud(SIMPLE,NULL,NULL,param_echo);
+    e=ConstruireNoeud(PIPE,echo,e,NULL);
+    Contexte* c=malloc(sizeof(Contexte));
+    initialiser_contexte(c);
+    afficher_expr(e);
+    int ret= get_expr(PIPE)(e,c);
+    expression_free(e);
+    free(c);
     return EXIT_SUCCESS;
 }
 
