@@ -237,6 +237,7 @@ int remote_localhost(char** param);
 int remote_add(char** param);
 int remote_remove(char ** param);
 int remote_list(char ** param);
+int remote_all(char** param);
 int remote_cmd_simple(char** param);
 			  
 int (*get_remote (char* name)) (char**);
@@ -245,6 +246,7 @@ int (*get_remote (char* name)) (char**);
 assoc tab_remote[] = {{"localhost", remote_localhost},
 		      {"add", remote_add},
 		      {"remove", remote_remove},
+		      {"all", remote_all},
 		      {"list", remote_list}};
 
 
@@ -389,6 +391,7 @@ int remote_list(char ** param)
  */
 int remote_cmd_simple(char** param)
 {
+    fprintf(stderr,"%s %s %s\n",param[0],param[1],param[2]);
     remote_machine* lmachine=NULL;
     param++;
     for(int i=0;i<nb_machine;i++)
@@ -417,7 +420,7 @@ int remote_cmd_simple(char** param)
     while(*param!=NULL)
 	param_echo=AjouterArg(param_echo,*(param++));
     
-	
+    
     
     
     Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_ssh);
@@ -437,24 +440,22 @@ int remote_cmd_simple(char** param)
  */
 int remote_all(char ** param) 
 {
-  printf("%d machines");
-  if (nb_machine == 0)
-  {
-    fprintf(stderr,"Il n'y a actuellement aucune machine dans la liste des machines distantes connectées.\nUtilisez remote add pour ajouter des machines.");
-    return EXIT_SUCCESS;
-  }
-  char * tmp = param[1];
-  for (int i=0; i<nb_machine; i++)                          // pour chaque machine, on exécute cmd_simple avec le nom de la machine et les parametres
-  {
-    param[1] = tab_machines[i]->name;                       // le premier paramètre correspond au nom de la machine  
-    if (remote_cmd_simple(param) == EXIT_FAILURE)           // on appelle ensuite cmd_simple avec le nom de la machine et la liste de paramètres.
+    if (nb_machine == 0)
     {
-      perror("remote_cmd_simple");
-      return EXIT_FAILURE;
+	fprintf(stderr,"Il n'y a actuellement aucune machine dans la liste des machines distantes connectées.\nUtilisez remote add pour ajouter des machines.");
+	return EXIT_SUCCESS;
     }
-  }
-  param[1] = tmp;
-  return EXIT_SUCCESS;
+    char * tmp = param[1];
+    for (int i=0; i<nb_machine; i++)                          // pour chaque machine, on exécute cmd_simple avec le nom de la machine et les parametres
+    {
+	if(fork()==0)
+	{
+	    param[1] = tab_machines[i]->name;                       // le premier paramètre correspond au nom de la machine  
+	    exit(remote_cmd_simple(param));                        // on appelle ensuite cmd_simple avec le nom de la machine et la liste de paramètres.
+	}
+    }
+    param[1] = tmp;
+    return EXIT_SUCCESS;
 }
 				  
 
