@@ -271,9 +271,6 @@ int remote_localhost(char** param)
     pipe(tube);
     c->fdin=tube[0];
     afficher_expr(e);
-    int ret= get_expr(BG)(e,c);
-    expression_free(e);
-    free(c);
     param+=2;
     while(*param!=NULL)
     {
@@ -283,6 +280,11 @@ int remote_localhost(char** param)
     }
     write(tube[1],"\n",1);
     close(tube[1]);
-    return ret;
+    get_expr(BG)(e,c);
+    expression_free(e);
+    free(c);
+    int status;
+    //waitpid(get_last_pid(),&status,NULL);
+    return WIFEXITED(status) ? WEXITSTATUS(status) : 128 + WTERMSIG(status);
 }
 

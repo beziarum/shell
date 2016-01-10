@@ -19,5 +19,5 @@ extern void initialiser_contexte(Contexte* c);
 extern void copier_contexte(Contexte* c1, Contexte* c2);
 extern int (*get_expr (expr_t e))(Expression*, Contexte*);
 extern int evaluer_expr(Expression *e);
-
+extern pid_t get_last_pid();
 #endif

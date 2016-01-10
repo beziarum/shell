@@ -27,6 +27,8 @@ typedef struct assoc {
     int (*data) (Expression*,Contexte*);
 } assoc;
 
+pid_t lpid=0;
+
 assoc tab_expr[] = {{SIMPLE, expr_simple},
 		    {BG, expr_bg},
 		    {SEQUENCE, expr_sequence},
@@ -99,6 +101,7 @@ int expr_simple (Expression* e, Contexte* c)
 	}
 	else
 	{
+	    lpid=pid;
 	    if(c->tube!=NULL)
 	    {
 		close(c->tube[0]);
@@ -108,7 +111,7 @@ int expr_simple (Expression* e, Contexte* c)
 		return 0;
 	    int status;
 	    waitpid(pid,&status,0);
-	    return WIFEXITED(status) ? WEXITSTATUS(status) : WTERMSIG(status);
+	    return WIFEXITED(status) ? WEXITSTATUS(status) : 128 + WTERMSIG(status);
 	}
     }
 }	
@@ -244,4 +247,9 @@ evaluer_expr(Expression *e)
     Contexte* c=malloc(sizeof(Contexte));
     initialiser_contexte(c);
     return get_expr(e->type)(e,c);
+}
+
+pid_t get_last_pid()
+{
+    return lpid;
 }
