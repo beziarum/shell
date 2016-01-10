@@ -226,7 +226,7 @@ typedef struct remote_machine {   // structure représentant une machine distant
     int fd;
 } remote_machine;
 
-remote_machine *tab_machines;
+remote_machine **tab_machines;
 int tab_length =10;
 int nb_machine=0;
 
@@ -292,25 +292,26 @@ int remote_localhost(char** param)
 
 int remote_add(char** param)
 {
-  tab_machines=malloc(10*sizeof(remote_machine));
+  tab_machines=malloc(10*sizeof(remote_machine*));
   
   int i=1;
   while(param[i] != NULL){
     remote_machine  rm;
     rm.name=param[i];
     if(i>tab_length){
-      realloc(tab_machines,tab_length*2);
+      tab_machines=realloc(tab_machines,sizeof(remote_machine*)*(tab_length*2));
       tab_length*=2;
-      nb_machine++;
     }
-    tab_machines[i] = rm;
+    nb_machine++;
+    tab_machines[i] = &rm;
   }
   for(int i=0;i<nb_machine;i++){
 
-    char** param_ssh=malloc(3*sizeof(char**));
-    param_ssh[0]="./ssh";
-    param_ssh[1]=tab_machines[i].name;
-    param_ssh[2]="./Shell -r";
+    char** param_ssh=malloc(4*sizeof(char**));
+    param_ssh[0]=strdup("./ssh");
+    param_ssh[1]=strdup(tab_machines[i]->name);
+    param_ssh[2]=strdup("./Shell -r");
+    param_ssh[3]=NULL;
 
     Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_ssh);
     e=ConstruireNoeud(BG,e,NULL,NULL);
@@ -325,4 +326,11 @@ int remote_add(char** param)
     free(c);
   }
   return 0;
+}
+
+void remote_list(){
+  if(nb_machine==0)
+    printf(" Aucun shell distant \n");
+  for(int i=0;i<nb_machine;i++)
+    printf("%s\n",tab_machines[i]->name);
 }
