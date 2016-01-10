@@ -275,7 +275,9 @@ int (*get_remote (char* name)) (char**)
   return NULL;
 }
 
-
+/*
+ * Commande créant un shell faussement distant sur la machine locale 
+ */
 int remote_localhost(char** param)
 {
     char** param_remote=malloc(3*sizeof(char**));
@@ -307,6 +309,11 @@ int remote_localhost(char** param)
     waitpid(get_last_pid(),&status,NULL);
     return WIFEXITED(status) ? WEXITSTATUS(status) : 128 + WTERMSIG(status);
 }
+
+/* Commande exécutant un shell distant controlé sur une plusieurs machines via une connexion ssh. 
+ * La fonction ajoute ensuite les machines dans le tableau global tab_machines
+ * On lancera la commande en rentrant une ou plusieurs machines en paramètre.
+ */
 
 int remote_add(char** param)
 {
@@ -376,6 +383,10 @@ int remote_list(char ** param)
   return EXIT_SUCCESS;
 }
 
+/*
+ * Fonction exécutant une commande sur le shell d'une machine distante connectée.
+ * On donnera en paramètre une machine, et une commande à exécuter avec ses paramètres
+ */
 int remote_cmd_simple(char** param)
 {
     remote_machine* lmachine=NULL;
@@ -404,6 +415,9 @@ int remote_cmd_simple(char** param)
     return EXIT_SUCCESS;
 }
 
+/* Fonction exécutant une commande sur le shell de toutes les machines connectées.
+ * On donnera en paramètre la commande et ses arguments
+ */
 int remote_all(char ** param) 
 {
   if (nb_machine == 0)
