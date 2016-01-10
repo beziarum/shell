@@ -244,6 +244,7 @@ int remote_add(char** param);
 int remote_remove(char ** param);
 int remote_list(char ** param);
 
+			  
 int (*get_remote (char* name)) (char**);
 
 /* Tableau associant les fonctionnalités de la commande remote avec les fonctions et les traitants */ 			  
