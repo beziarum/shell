@@ -11,7 +11,6 @@
 #include <readline/history.h>
 #include <limits.h>
 #include <errno.h>
-#include <limits.h>
 
 /*
  * Déclaration des commandes
@@ -369,7 +368,11 @@ int remote_cmd_simple(char** param)
 	    break;
 	}
     }
-
+    if (!lmachine) 
+    {
+      fprintf(stderr,"aucune machine de ce nom n'est présente dans la liste.\nUtilisez remote list pour obtenir la liste");
+      return(EXIT_FAILURE);
+    }
     param++;
     while(*param!=NULL)
     {
