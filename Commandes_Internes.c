@@ -231,10 +231,17 @@ int tab_length =10;
 int nb_machine=0;
 
 int remote_localhost(char** param);
+int remote_add(char** param);
+int remote_remove(char ** param);
+int remote_list(char ** param);
+
 			  
 int (*get_remote (char* name)) (char**);
 			  
-assoc tab_remote[] = {{"localhost", remote_localhost}};
+assoc tab_remote[] = {{"localhost", remote_localhost},
+		      {"add", remote_add},
+		      {"remove", remote_remove},
+		      {"list", remote_list}};
 
 int remote(char** params)
 {
