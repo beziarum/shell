@@ -226,30 +226,25 @@ my_yyparse(void)
       |       fichier vers lequel on redirige.						      |
       `--------------------------------------------------------------------------------------*/
 
-/* Fonction principale.
- * 
+/* 
+ * Fonction principale.
  */
 int main (int argc, char **argv)
 {
     for(int i=1; i<argc; i++)
 	if(strcmp("-r",argv[i])==0)
 	    interactive_mode=false;
-  // faire en sorte qu'interactive_mode = 0 lorsque le shell est distant 
-  if (interactive_mode)
-    {
-      using_history();
-    }
-  else
-    {
-      //  mode distant 
-    }
-  
+    using_history();
   while (1){
     if (my_yyparse () == 0) {  /* L'analyse a abouti */
       fflush(stdout);
       status = evaluer_expr(ExpressionAnalysee);
       expression_free(ExpressionAnalysee);
 
+
+      //on exécute un waitpid non bloquant (WNOHANG)
+      //tant que sa valeur de retour vaut autre chose que 0 alors
+      //c'est le pid d'un processus qui c'est terminé
       int pid,status;
       while( (pid = waitpid(-1,&status,WNOHANG)) > 0)
 	  printf("le processus %d est fini (%d)\n",
