@@ -220,14 +220,8 @@ int history(char ** arg)
 
 //partie remote
 
-
-/* 
- * Structure représentant une machine distante. Elle comprend un champ correspondant au nom de la machine
- * Et un champ correspondant à un descripteur de fichier qui permet la communication entre la machine distante et la machine locale
- */
-typedef struct remote_machine {   
-    char* name;                   
-    int fd;
+typedef struct remote_machine {   // structure représentant une machine distante
+    char* name;
 } remote_machine;
 
 /* Tableau contenant des pointeurs vers des structures de machines distantes */
@@ -243,7 +237,7 @@ int remote_localhost(char** param);
 int remote_add(char** param);
 int remote_remove(char ** param);
 int remote_list(char ** param);
-
+int remote_cmd_simple(char** param);
 			  
 int (*get_remote (char* name)) (char**);
 
@@ -272,7 +266,7 @@ int (*get_remote (char* name)) (char**)
   for (int i=0; i<taille_tab_remote; i++)
     if (strcmp(name,tab_remote[i].name)==0)
       return tab_remote[i].data;
-  return NULL;
+  return remote_cmd_simple;
 }
 
 /*
@@ -317,53 +311,59 @@ int remote_localhost(char** param)
 
 int remote_add(char** param)
 {
-  tab_machines=malloc(10*sizeof(remote_machine*));
-  
-  int i=1;
-  while(param[i] != NULL){
-    remote_machine  rm;
-    rm.name=strdup(param[i]);
-    if(i>tab_length){
-      tab_machines=realloc(tab_machines,sizeof(remote_machine*)*(tab_length*2));
-      tab_length*=2;
+    int nb_add_machines=0;
+    param+=2;//on saute le «remote» et le «add»
+    int i=0;
+    while(param[i] != NULL){
+	nb_add_machines++;
+	remote_machine* rm=malloc(sizeof(remote_machine));
+	rm->name=strdup(param[i]);
+	if(i+nb_machine>=tab_length){
+	    if(tab_length==0)
+		tab_length=10;
+	    else
+		tab_length*=2;
+	    tab_machines=realloc(tab_machines,sizeof(remote_machine*)*tab_length);
+	}
+	tab_machines[i+nb_machine] = rm;
+	i++;
     }
-    nb_machine++;
-    tab_machines[i] = &rm;
-  }
-  for(int i=0;i<nb_machine;i++){
+    /*for(int i=0;i<nb_add_machines;i++){
 
-    char** param_ssh=malloc(4*sizeof(char**));
-    param_ssh[0]=strdup("./ssh");
-    param_ssh[1]=strdup(tab_machines[i]->name);
-    param_ssh[2]=strdup("./Shell -r");
-    param_ssh[3]=NULL;
+	char** param_ssh=malloc(4*sizeof(char**));
+	param_ssh[0]=strdup("ssh");
+	param_ssh[1]=strdup(tab_machines[i]->name);
+	param_ssh[2]=strdup("./Shell -r");
+	param_ssh[3]=NULL;
 
-    Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_ssh);
-    e=ConstruireNoeud(BG,e,NULL,NULL);
-    Contexte* c=malloc(sizeof(Contexte));
-    initialiser_contexte(c);
-    int tube[2];
-    pipe(tube);
-    c->fdin=tube[0];
-    afficher_expr(e);
-    int ret= get_expr(BG)(e,c);
-    //expression_free(e);
-    free(c);
-  }
-  return 0;
+	Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_ssh);
+	e=ConstruireNoeud(BG,e,NULL,NULL);
+	Contexte* c=malloc(sizeof(Contexte));
+	initialiser_contexte(c);
+	int tube[2];
+	pipe(tube);
+	c->fdin=tube[0];
+	c->fdclose=tube[1];
+	tab_machines[nb_machine+i]->fd=tube[1];
+	afficher_expr(e);
+	int ret= get_expr(BG)(e,c);
+	//expression_free(e);
+	free(c);
+	}*/
+    nb_machine+=nb_add_machines;
+    return 0;
 }
 
-/* 
- * Commande fermant tous les shells distants
- */ 
+
 int remote_remove(char ** param) 
 {
   for (int i=0; tab_machines[i]; i++) 
   {
-    close(tab_machines[i]->fd);         // on ferme le shell
-    free(tab_machines[i]);              // on libère l'espace alloué
+    free(tab_machines[i]->name);
+    free(tab_machines[i]);
   }
-  return EXIT_SUCCESS;
+  nb_machine=0;
+  return 0;
 }
 
 
@@ -391,9 +391,9 @@ int remote_cmd_simple(char** param)
 {
     remote_machine* lmachine=NULL;
     param++;
-    for(int i=0;i<tab_length;i++)
+    for(int i=0;i<nb_machine;i++)
     {
-	if(tab_machines[i]!=NULL && strcmp(tab_machines[i]->name,*param))
+	if(tab_machines[i]!=NULL && strcmp(tab_machines[i]->name,*param)==0)
 	{
 	    lmachine=tab_machines[i];
 	    break;
@@ -405,13 +405,30 @@ int remote_cmd_simple(char** param)
       return EXIT_FAILURE;
     }
     param++;
+    
+    
+    char** param_ssh=InitialiserListeArguments();
+    param_ssh=AjouterArg(param_ssh,"ssh");
+    param_ssh=AjouterArg(param_ssh,lmachine->name);
+    param_ssh=AjouterArg(param_ssh,"./Shell -r");
+
+    char** param_echo=InitialiserListeArguments();
+    param_echo=AjouterArg(param_echo,"echo");
     while(*param!=NULL)
-    {
-	write(lmachine->fd,*param,strlen(*param));
-	write(lmachine->fd," ",1);
-	param++;
-    }
-    write(lmachine->fd,"\n",1);
+	param_echo=AjouterArg(param_echo,*(param++));
+    
+	
+    
+    
+    Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_ssh);
+    Expression* echo=ConstruireNoeud(SIMPLE,NULL,NULL,param_echo);
+    e=ConstruireNoeud(PIPE,echo,e,NULL);
+    Contexte* c=malloc(sizeof(Contexte));
+    initialiser_contexte(c);
+    afficher_expr(e);
+    int ret= get_expr(PIPE)(e,c);
+    expression_free(e);
+    free(c);
     return EXIT_SUCCESS;
 }
 
