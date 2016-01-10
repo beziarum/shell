@@ -36,7 +36,7 @@ typedef struct assoc {
     int (*data) (char ** params);
 } assoc;
 
-/* Tableau associant les fonctionnalités des commandes internes avec les fonctions et les traitants */ 
+/* Tableau associant les fonctionnalités des commandes internes avec les traitants */ 
 assoc tab_cmd_intern[] = {{"date", date},
 			  {"echo", echo},
 			  {"cd", cd},
@@ -111,12 +111,12 @@ int cd (char ** arg)
   int r;
   if (arg[1]==NULL)
   {
-    r = chdir(getenv("HOME"));                                       // cas d'un retour au home cd sans paramètre
+    r = chdir(getenv("HOME"));       // cas d'un retour au home cd sans paramètre
     verifier(r!=-1,"cd");
   }
   else
   {
-    r = chdir(arg[1]);                                               // cas classique : on apelle juste chdir avec le nom du dossier
+    r = chdir(arg[1]);               // cas classique : on apelle juste chdir avec le nom du dossier
     verifier(r!=-1, "cd");
   }
   return r;
@@ -161,7 +161,7 @@ int my_exit(char ** arg)
 
 /*
  * Commande kill
- * on va utiliser la fonction de la libc kill
+ * on va utiliser la fonction kill de la libc
  */
 int killShell (char ** arg)
 {
@@ -177,7 +177,7 @@ int killShell (char ** arg)
     int c = 1;
     while (arg[c]!=NULL)
     {
-      ret = kill (atoi(arg[1]),SIGTERM);        // cas par defaut sans signal passé en parametre
+      ret = kill (atoi(arg[1]),SIGTERM);        // cas par defaut sans signal passé en paramètre
       verifier(ret!=-1, "kill");
       c++;
     }
@@ -212,10 +212,10 @@ int history(char ** arg)
   }
   HIST_ENTRY ** hystory_list = history_list ();                       // on crée une variable contenant l'historique
   int treshold = history_length;
-  if (arg[1] != NULL && atoi(arg[1]) < history_length)                // si il y a un argument, et qu'il est inférieur au nombre d'éléments de l'historique
-    treshold = atoi(arg[1]) +1;
-  for (int i = history_length - treshold; i < history_length; i++)    // on affiche les n derniers rangs de l'historique (sans compter la commande history qu'on vient de lancer)
-    printf ("%d: %s\n", i + history_base, hystory_list[i]->line);
+  if (arg[1] != NULL && atoi(arg[1]) < history_length)                // si il y a un argument, 
+    treshold = atoi(arg[1]) +1;                                       // et qu'il est inférieur au nombre d'éléments de l'historique
+  for (int i = history_length - treshold; i < history_length; i++)    // on affiche les n derniers rangs de l'historique
+    printf ("%d: %s\n", i + history_base, hystory_list[i]->line);     // (sans compter la commande history qu'on vient de lancer)
   return EXIT_SUCCESS;
 }
 
@@ -243,7 +243,7 @@ int remote_cmd_simple(char** param);
 			  
 int (*get_remote (char* name)) (char**);
 
-/* Tableau associant les fonctionnalités de la commande remote avec les fonctions et les traitants */ 			  
+/* Tableau associant les fonctionnalités de la commande remote avec les traitants */ 			  
 assoc tab_remote[] = {{"localhost", remote_localhost},
 		      {"add", remote_add},
 		      {"remove", remote_remove},
@@ -307,7 +307,8 @@ int remote_localhost(char** param)
     return WIFEXITED(status) ? WEXITSTATUS(status) : 128 + WTERMSIG(status);
 }
 
-/* Commande exécutant un shell distant controlé sur une plusieurs machines via une connexion ssh. 
+/* 
+ * Commande exécutant un shell distant controlé sur une plusieurs machines via une connexion ssh. 
  * La fonction ajoute ensuite les machines dans le tableau global tab_machines
  * On lancera la commande en rentrant une ou plusieurs machines en paramètre.
  */
@@ -315,7 +316,7 @@ int remote_localhost(char** param)
 int remote_add(char** param)
 {
     int nb_add_machines=0;
-    param+=2;//on saute le «remote» et le «add»
+    param+=2;                               //on saute le «remote» et le «add»
     int i=0;
     while(param[i] != NULL){
 	nb_add_machines++;
@@ -417,7 +418,8 @@ int remote_cmd_simple(char** param)
     return ret;
 }
 
-/* Fonction exécutant une commande sur le shell de toutes les machines connectées.
+/* 
+ * Fonction exécutant une commande sur le shell de toutes les machines connectées.
  * On donnera en paramètre la commande et ses arguments
  */
 int remote_all(char ** param) 
@@ -434,7 +436,7 @@ int remote_all(char ** param)
 	if((pid[i]=fork())==0)
 	{
 	    param[1] = tab_machines[i]->name;                       // le premier paramètre correspond au nom de la machine  
-	    exit(remote_cmd_simple(param));                        // on appelle ensuite cmd_simple avec le nom de la machine et la liste de paramètres.
+	    exit(remote_cmd_simple(param));                         // on appelle ensuite cmd_simple avec le nom de la machine et la liste de paramètres.
 	}
     }
     param[1] = tmp;
