@@ -99,10 +99,11 @@ int expr_simple (Expression* e, Contexte* c)
 	    
     }
     else
-    { 
+    { //pour le fils…
 	pid_t pid;
+	pid=fork();
 	if(pid==0)
-	{ //pour le fils…
+	{
 	    appliquer_contexte(c,false); //on applique le contexte
 	    if(intern != NULL) //si c'est une commande interne
 	    {
