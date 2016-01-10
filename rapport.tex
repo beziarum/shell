@@ -45,7 +45,23 @@ fonctionnalité.
 
 \newpage
 \section{Commande externe}
-
+ 
+ Le début de ce projet avait deja été bien entammé en tp. Nous nous somme donc
+ inspiré de se qui avait été fait en classe. Nous avons créer une structure contexte
+ qui contiendra a therme tout les elements dont nous auront besoin. 
+ 
+ Ensuite nous avons implémenté une deuxieme structure assoc qui posséde un champ expr\_t
+ et un pointeur de fonction reliant le type d'expréssion a la fonction de traitement
+ qui lui est associé.
+ 
+ \subsection{Commande simple en avant plan}
+ 
+ L'éxécution de commande simple en avant plan est implémenté avec un simple fork().
+ On récupére les arguments de la commande rentré et on fait un execvp de cette commande
+ avec ces parametres du coté de fils. Pendant ce temps le pere attend la fin de l'éxécution
+ et récupére la valeur de retour de son fils.
+ 
+ 
 
 \newpage
 \section{Expression}
