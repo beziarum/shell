@@ -180,7 +180,9 @@ my_yyparse(void)
 	  ret = yyparse_string(line);  
 	  free(line);
 	  return ret;
-	}    
+	}
+      else
+	  exit(0);
     }
 }
 
