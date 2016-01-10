@@ -66,7 +66,7 @@ int (*get_intern (char* name)) (char**)
 }
 
 /*
- * Commande echo
+ * Commande permettant d'afficher des chaines de caractères
  */
 int echo(char ** arg)
 {
@@ -80,7 +80,7 @@ int echo(char ** arg)
 	c++;
       }
       else{
-	printf("%s ",arg[c]);    // on affiche simplement ces parametres sur la sortie standard
+	printf("%s ",arg[c]);    // on affiche simplement ces paramètres sur la sortie standard
 	c++;
       }
     }
@@ -89,7 +89,7 @@ int echo(char ** arg)
 }
 
 /*
- * Commande date
+ * Commande affichant la date
  */
 int date(char ** arg)
 {
@@ -103,7 +103,7 @@ int date(char ** arg)
 
 
 /*
- * Commande cd
+ * Commande permettant de changer de répertoire courant
  */
 int cd (char ** arg)
 {
@@ -152,15 +152,15 @@ int hostname(char ** arg)
 int my_exit(char ** arg) 
 {
   if (arg[1] != NULL)         // si il y a un argument
-    exit(atoi(arg[1]));       // on quitte le shell en renvoyant la valeur de l'agument
+    exit(atoi(arg[1]));       // on quitte le shell en renvoyant la valeur de l'argument
   else
     exit(0);
 }
 
 
 /*
- *Commande kill
- *on va utiliser la fonction de la libc kill
+ * Commande kill
+ * on va utiliser la fonction de la libc kill
  */
 int killShell (char ** arg)
 {
@@ -220,13 +220,23 @@ int history(char ** arg)
 
 //partie remote
 
-typedef struct remote_machine {   // structure représentant une machine distante
-    char* name;
+
+/* 
+ * Structure représentant une machine distante. Elle comprend un champ correspondant au nom de la machine
+ * Et un champ correspondant à un descripteur de fichier qui permet la communication entre la machine distante et la machine locale
+ */
+typedef struct remote_machine {   
+    char* name;                   
     int fd;
 } remote_machine;
 
+/* Tableau contenant des pointeurs vers des structures de machines distantes */
 remote_machine **tab_machines;
+
+/* Taille initiale du tableau */
 int tab_length =10;
+
+/* Nombre de machines présentes dans le tableau */
 int nb_machine=0;
 
 int remote_localhost(char** param);
@@ -234,13 +244,14 @@ int remote_add(char** param);
 int remote_remove(char ** param);
 int remote_list(char ** param);
 
-			  
 int (*get_remote (char* name)) (char**);
-			  
+
+/* Tableau associant les fonctionnalités de la commande remote avec les fonctions et les traitants */ 			  
 assoc tab_remote[] = {{"localhost", remote_localhost},
 		      {"add", remote_add},
 		      {"remove", remote_remove},
 		      {"list", remote_list}};
+
 
 int remote(char** params)
 {
@@ -334,18 +345,23 @@ int remote_add(char** param)
   return 0;
 }
 
-
+/* 
+ * Commande fermant tous les shells distants
+ */ 
 int remote_remove(char ** param) 
 {
   for (int i=0; tab_machines[i]; i++) 
   {
-    close(tab_machines[i]->fd);
-    free(tab_machines[i]);
+    close(tab_machines[i]->fd);         // on ferme le shell
+    free(tab_machines[i]);              // on libère l'espace alloué
   }
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 
+/* 
+ * Commande affichant la liste des machines connectées 
+ */
 int remote_list(char ** param)
 {
   if (nb_machine == 0)
@@ -356,7 +372,7 @@ int remote_list(char ** param)
   else 
     for (int i=0; i<nb_machine; i++)
       printf("%s\n", tab_machines[i]->name);
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 int remote_cmd_simple(char** param)
