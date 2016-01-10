@@ -437,6 +437,7 @@ int remote_cmd_simple(char** param)
  */
 int remote_all(char ** param) 
 {
+  printf("%d machines");
   if (nb_machine == 0)
   {
     fprintf(stderr,"Il n'y a actuellement aucune machine dans la liste des machines distantes connectées.\nUtilisez remote add pour ajouter des machines.");
