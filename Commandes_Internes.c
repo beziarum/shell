@@ -350,7 +350,6 @@ int remote_add(char** param)
       alreadyInList=0;
       i++;
     }
-    printf("%d", nb_machine);
     return EXIT_SUCCESS;
 }
 
