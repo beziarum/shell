@@ -4,8 +4,10 @@
 #include "Evaluation.h"
 #include "Commandes_Internes.h"
 
-//Ces fonction implémentant le comportement à suivre pour chaques
-//types d'expressions
+/*
+ * Ces fonctions implémentent le comportement à suivre pour chaque
+ * type d'expressions
+ */
 int expr_simple(Expression* e, Contexte* c);
 int expr_bg(Expression* e, Contexte* c);
 int expr_sequence(Expression* e, Contexte* c);
@@ -19,9 +21,11 @@ int expr_vide(Expression* e, Contexte* c);
 int expr_pipe(Expression* e, Contexte* c);
 int expr_redirection_er(Expression* e, Contexte* c);
 
-//Cette fonction interviennent sur le comportement du programme
-//en foction du contexte, swapfd est utilisé dans
-//appliquer_contexte
+/*
+ * Cette fonction intervient sur le comportement du programme
+ * en fonction du contexte, swapfd est utilisé dans
+ * appliquer_contexte
+ */
 void appliquer_contexte(Contexte* c, bool save);
 void swapfd(int* fdnew, int fdorigin, bool save);
 
@@ -83,18 +87,18 @@ int expr_bg (Expression* e, Contexte* c)
 
 /*
  * Fonction traitant les expressions simples. toutes les feuilles d'un arbre
- * expression étant des expressions simples, c'est ici qu'on applique les
+ * étant des expressions simples, c'est ici qu'on applique les
  * contextes modifiés par les autres traitants d'expression.
  */
 int expr_simple (Expression* e, Contexte* c)
 {
     int (*intern)(char**)=get_intern(e->arguments[0]);
-    if(intern!=NULL && c->bg!=true) //si la commande est une commande interne
-	                            //et en avant-plan
+    if(intern!=NULL && c->bg!=true) // si la commande est une commande interne
+	                            // et en avant-plan
     {
-	appliquer_contexte(c,true);  //on applique le contexte
-	int ret=intern(e->arguments);//on exécute la commande interne
-	appliquer_contexte(c,false); //et on restaure le contexte
+	appliquer_contexte(c,true);   // on applique le contexte
+	int ret=intern(e->arguments); // on exécute la commande interne
+	appliquer_contexte(c,false);  // et on restaure le contexte
 	return ret;
 	    
     }
@@ -104,31 +108,31 @@ int expr_simple (Expression* e, Contexte* c)
 	pid=fork();
 	if(pid==0)
 	{
-	    appliquer_contexte(c,false); //on applique le contexte
-	    if(intern != NULL) //si c'est une commande interne
+	    appliquer_contexte(c,false); // on applique le contexte
+	    if(intern != NULL) // si c'est une commande interne
 	    {
-		exit(intern(e->arguments)); //on l'éxécute, puis on coupe
+		exit(intern(e->arguments)); // on l'éxécute, puis on coupe
 	    }
 	    else
 	    {
-		execvp(e->arguments[0],e->arguments);//sinon c'est une commande externe,
-		                                     //donc on lui passe la main
+		execvp(e->arguments[0],e->arguments); // sinon c'est une commande externe,
+		                                      // donc on lui passe la main
 		perror(e->arguments[0]);
 		exit(1);
 	    }
 	}
 	else
-	{ //pour le père
-	    lpid=pid;//on met à jour le pid du dernier fils créé
-	    if(c->tube!=NULL)//s'il existe on ferme le tube
+	{ // pour le père
+	    lpid=pid; // on met à jour le pid du dernier fils créé
+	    if(c->tube!=NULL) // s'il existe on ferme le tube
 	    {
 		close(c->tube[0]);
 		close(c->tube[1]);
 	    }
-	    if (c->bg) //si le fils est exécuté en arrière plan alors on
-		return 0; //redonne la main au shell
+	    if (c->bg) // si le fils est exécuté en arrière plan alors on
+		return 0; // redonne la main au shell
 	    int status;
-	    waitpid(pid,&status,0); //sinon on attend qu'il termine et on renvoi son code de retour
+	    waitpid(pid,&status,0); // sinon on attend qu'il termine et on renvoie son code de retour
 	    return WIFEXITED(status) ? WEXITSTATUS(status) : 128 + WTERMSIG(status);
 	}
     }
@@ -139,23 +143,23 @@ int expr_simple (Expression* e, Contexte* c)
  */
 int expr_pipe(Expression* e, Contexte* c)
 {
-    Contexte* c2=malloc(sizeof(Contexte)); //on créé une copie du contexte
+    Contexte* c2=malloc(sizeof(Contexte)); // on créé une copie du contexte
     copier_contexte(c,c2);
 
-    int* tube=c2->tube=malloc(2*sizeof(int)); //on garde une copie du tube
-    pipe(tube);                          //dans le contexte de droite pour
-                                         //pouvoir le fermer dans le shell
+    int* tube=c2->tube=malloc(2*sizeof(int)); // on garde une copie du tube
+    pipe(tube);                          // dans le contexte de droite pour
+                                         // pouvoir le fermer dans le shell
 
-    c->bg=true;         //la commande à gauche sera en arrière plan
-    c->fdout=tube[1];   //sa sortie sera redirigé vers l'entrée du pipe
-    c->fdclose=tube[0]; //et on fermera la sortie du tube
+    c->bg=true;         // la commande à gauche sera en arrière plan
+    c->fdout=tube[1];   // sa sortie sera redirigée vers l'entrée du pipe
+    c->fdclose=tube[0]; // et on fermera la sortie du tube
     
-    c2->fdin=tube[0];   //on redirigera la sortie du tube vers l'entrée de la
-                        //seconde commmande
-    c2->fdclose=tube[1];//et on fermera l'entrée du tube
+    c2->fdin=tube[0];    // on redirigera la sortie du tube vers l'entrée de la
+                         // seconde commmande
+    c2->fdclose=tube[1]; // et on fermera l'entrée du tube
 
-    get_expr(e->gauche->type)(e->gauche,c);        //enfin on exécute les
-    return get_expr(e->droite->type)(e->droite,c2);//deux commandes
+    get_expr(e->gauche->type)(e->gauche,c);         // enfin on exécute les
+    return get_expr(e->droite->type)(e->droite,c2); // deux commandes
 }
 
 
@@ -238,9 +242,10 @@ int expr_redirection_er(Expression* e, Contexte* c)
 
 /*
  * Parcourt le tableau d'association pour trouver quelle est la fonction
- * qui s'occupe de l'expression passée en paramètre et la renvoi.
- * Si cette fonction n'as pas put être trouvée alors c'est cette expression
- * n'as pas été implémenté*/
+ * qui s'occupe de l'expression passée en paramètre et la renvoie.
+ * Si cette fonction n'as pas put être trouvée alors c'est que cette expression
+ * n'as pas été implémentée
+ */
 int (*get_expr (expr_t expr)) (Expression*, Contexte*)
 {
     int taille_tab_expr = sizeof (tab_expr)/sizeof (assoc);
@@ -264,7 +269,7 @@ void initialiser_contexte(Contexte* c)
 }
 
 /*
- *copie les valeurs de c1 dans c2
+ * copie les valeurs de c1 dans c2
  */
 void copier_contexte(Contexte* c1, Contexte* c2)
 {
@@ -290,7 +295,7 @@ void appliquer_contexte(Contexte* c,bool save)
 }
 
 /*
- * effectue un dup2 sur la valeur pointé par fdnew  et sur fdold
+ * effectue un dup2 sur la valeur pointée par fdnew  et sur fdold
  * si save vaut vrai alors fdold est sauvegardé pour pouvoir effectuer 
  * l'opération inverse.
  */
