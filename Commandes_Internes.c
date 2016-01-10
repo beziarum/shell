@@ -328,9 +328,24 @@ int remote_add(char** param)
   return 0;
 }
 
-void remote_list(){
-  if(nb_machine==0)
-    printf(" Aucun shell distant \n");
-  for(int i=0;i<nb_machine;i++)
-    printf("%s\n",tab_machines[i]->name);
+
+int remote_remove(char ** param) 
+{
+  for (int i=0; tab_machines[i]; i++) 
+  {
+    close(tab_machines[i]->fd);
+    free(tab_machines[i]);
+  }
+  return 0;
+}
+
+
+int remote_list(char ** param)
+{
+  if (nb_machine == 0)
+    printf("Il n'y a actuellement aucune machine dans la liste des machines distantes connectées.\nUtilisez remote add pour ajouter des machines.");
+  else 
+    for (int i=0; i<nb_machine; i++)
+      printf("%s\n", tab_machines[i]->name);
+  return 0;
 }
