@@ -43,7 +43,6 @@ Nous verrons au travers de ce rapport comment nous avons choisi d'implémenter c
 fonctionnalités.
 
 
-
 \newpage
 
 \section{Commande externe}
@@ -78,16 +77,14 @@ fonctionnalités.
  Pour traiter des commandes en arrière-plan, nous avons rajouté un champ "background"
 à notre structure contexte qui passe à vraie si le caractère \& est interprété.
  Ensuite, il suffit de dire que dans ce contexte on lance le fork() mais on n’attend pas
-la fin de l'exécution du fils.
+la fin de l'exécution du fils.\ref{cmd simple arriere plan}
  
  
  \subsection{Élimination des zombies}
 
  Pour éliminer les zombies causés par les commandes en arrière plan nous avons choisi d'effectuer
  à chaque tours de boucles une série de wait non bloquant, cette série se terminant dès qu'un des
- wait renvoie 0.
- 
- \ref{main}
+ wait renvoie 0. \ref{main}
  
 
 \newpage
@@ -108,26 +105,26 @@ les différents comportements.\ref{autre expression}
 
 Une expression séquentielle consiste à exécuter la commande de gauche puis celle de droite.
 Il nous suffit donc d'appeler dans l'ordre avec notre fonction "get\_expr" le fils gauche puis le fils
-droit de notre expression ";".
+droit de notre expression ";".\ref{autre expression}
 
 \subsection{les expressions booleene}
 
 Nous avons suivi le même principe pour les expressions booléennes. On appelle le fils gauche puis
 le fils droit de l'expression.
 À la différence que le fils droit n'est appelé que si la commande gauche à bien était exécuté dans le
-cas du "et".Et le fils droit n'est appelé qu’en cas d'échec du fils gauche dans le cas du "ou"
+cas du "et".Et le fils droit n'est appelé qu’en cas d'échec du fils gauche dans le cas du "ou".\ref{et et ou}
 
 \subsection{Les sous-expressions}
 
 Il s'agit sans doute de l'expression la plus simple à gérer. Il suffit d'appeler le fils
-gauche de l'expression. La gestion de l'arborescence fera le reste.
+gauche de l'expression. La gestion de l'arborescence fera le reste.\ref{sousshell}
 
 \subsection{Les redirections}
 
 Pour gérer les redirections, nous avons rajouté dans notre structure contexte des descripteurs
 de fichier correspondant aux entrées et sortie standard des processus. Il nous suffit ensuite 
 d'ouvrir le fichier passé en paramètre sur les bons descripteurs et d'appeler la commande.
-Les entrées et sorties seront ensuite remises à zéro par notre fonction "swapfd".
+Les entrées et sorties seront ensuite remises à zéro par notre fonction "swapfd". \ref{redirection}
 
 \subsection{Les pipes}
 
@@ -135,7 +132,7 @@ Un pipe est composé de deux commmande. La première sera exécuté en arrière 
 sa sortie standard par l'entrée d'un pipe. Pour la seconde on a juste à remplacer son entrée par
 la sortie du pipe précédant. Ces deux parties ont été exécuté simplement en utilisant les
 redirections et l'arrière plan précédement codé. En plus de celà il fallait fermer les deux
-côtés du pipe dans le père, pour celà nous avons rajouté un champs dans la structure contexte.
+côtés du pipe dans le père, pour celà nous avons rajouté un champs dans la structure contexte.\ref{pipe}
 
 
 \subsection{Les expressions récursives}
@@ -158,43 +155,43 @@ représenté un travail très fastidieux.\ref{cmd_de_base}
 \subsection{Fonction}
 \subsubsection{echo}
  La commande "echo" n'est rien d'autre qu'une fonction qui écrit les paramètres qu'elle reçoit
- sur la sortie standard. Un simple printf suffit pour cette commande.
+ sur la sortie standard. Un simple printf suffit pour cette commande. \ref{echo}
  
 \subsubsection{date}
  Pour cette commande, nous avons dû faire quelques recherches sur les fonctions fournies par la librairie "time".
  Nous avons décidé de créer une structure "tm" et d'utiliser la fonction "strftime" qui
- sert justement à afficher l'heure selon son propre format qu'on peut définir à la volée.
+ sert justement à afficher l'heure selon son propre format qu'on peut définir à la volée. \ref{date}
  
  \subsubsection{cd}
  La commande "cd" a requis d'utiliser l'appel système "chdir" qui ouvre le répertoire passé en paramètre
  Nous avons veillé à récupérer la variable d'environnement "HOME" avec getenv pour les cas ou "cd" est
  appelé sans paramètre. Nous avons également tenté de prévenir d'éventuelles erreurs(comme les
- répertoires non existants).
+ répertoires non existants). \ref{cd}
  
  \subsubsection{pwd}
  Cette commande appelle la fonction getcwd qui copie le chemin absolu du répertoire 
  courant dans un buffer.
  Le buffer est initialisé avec la taille PATH\_MAX, qui est une macro du fichier limites.h,
- et qui correspond à la taille maximale d'un chemin. Il suffit ensuite d'afficher le buffer.
+ et qui correspond à la taille maximale d'un chemin. Il suffit ensuite d'afficher le buffer. \ref{pwd et hostname}
  
  \subsubsection{hostname}
  Cette fonction a été implémentée d'une manière semblable à la fonction PWD.
 Tout d'abord, nous avons du récupérer le nom de l'hôte local grâce à l'appel système gethostname, qui copie ce nom dans un buffer. 
 La taille du buffer est initialisée à l'aide de la macro HOST\_NAME\_MAX qui correspond à la taille maximale d'un nom de localhost. 
-On affiche ensuite ce dernier.
+On affiche ensuite ce dernier. \ref{pwd et hostname}
  
  \subsubsection{exit}
  La commande exit permet de quitter le Shell. 
  Elle peut être exécutée avec ou sans paramètres. 
  S'il n'y a pas de paramètre, on ferme le Shell en renvoyant la valeur 0. 
- Sinon, on ferme le Shell en renvoyant la valeur entière du premier paramètre. Il est donc inutile de donner plusieurs paramètres à cette commande.
+ Sinon, on ferme le Shell en renvoyant la valeur entière du premier paramètre. Il est donc inutile de donner plusieurs paramètres à cette commande. \ref{exit et kill}
  
  \subsubsection{kill}
  Pour la commande kill nous avons simplement utilisé l'appel système kill. 
  Notre commande peut gérer le paramètre de choix de signal à envoyer. Il peut l'envoyer à tous les processus
  rentrés en paramètres.
  Pour gérer l'erreur en cas d'absence de paramètres nous avons touché directement à la valeur
- de errno la passant à EINVAL (invalid argument).
+ de errno la passant à EINVAL (invalid argument). \ref{exit et kill}
  
  \subsubsection{history}
  La commande history renvoie l'historique des commandes entrées par l'utilisateur. 
@@ -204,7 +201,7 @@ On affiche ensuite ce dernier.
  Ainsi on pourra utiliser les fonctions de gestions d'historique. 
  À chaque fois qu'une fonction est exécutée, elle est ajoutée à l'historique grâce à la fonction add\_history. 
  Ensuite, notre fonction history récupère la liste des fonctions appelées, et les affiches une par une. 
- On peut également exécuter la commande avec un argument n, pour afficher uniquement les n dernières commandes.
+ On peut également exécuter la commande avec un argument n, pour afficher uniquement les n dernières commandes. \ref{history}
  
  \subsection{Intégration au Shell}
  
@@ -215,12 +212,10 @@ On affiche ensuite ce dernier.
  pour exécuter les deux parties du programme en même temps. Cepandant les threads d'un même processus
  se partageant le même tableau de descripteur de fichier, cette stratégie n'était pas compatible
  avec la redirection de flux. Finalement nous avons décidé d'exécuter les commandes internes dans
- un processus fils si elles devaient l'être en arrière plan.
+ un processus fils si et seulement si elles devaient l'être en arrière plan.
  Afin de ne pas nous encombrer d'une forêt de if ou d'un « switch/case » conséquent, nous avons
  décidé de réutiliser un tableau d'association, mettant en relation le nom d'une commande interne
- avec la fonction traitant cette commande.
- 
- \ref{expr_simple}
+ avec la fonction traitant cette commande.  \ref{expr_simple}
  
 
 \newpage
@@ -493,7 +488,9 @@ expr_sequence (Expression * e, Contexte * c)
   get_expr (e->gauche->type) (e->gauche, c);
   return get_expr (e->droite->type) (e->droite, c);
 }
-
+\end{verbatim}
+\label{cmd simple arriere plan}
+\begin{verbatim}
 /*
  * Fonction traitant les expressions en arrière plan.
  */
@@ -503,7 +500,9 @@ expr_bg (Expression * e, Contexte * c)
   c->bg = true;
   return get_expr (e->gauche->type) (e->gauche, c);
 }
-
+\end{verbatim}
+\label{pipe}
+\begin{verbatim}
 int
 expr_pipe (Expression * e, Contexte * c)
 {
@@ -526,7 +525,9 @@ expr_pipe (Expression * e, Contexte * c)
   return get_expr (e->droite->type) (e->droite, c2);	// deux commandes
 }
 
-
+\end{verbatim}
+\label{et et ou}
+\begin{verbatim}
 /*
  * Traite l'expression SEQUENCE ET
  * Exécute la première commande puis la seconde si la première a
@@ -556,7 +557,9 @@ expr_sequence_ou (Expression * e, Contexte * c)
   else
     return get_expr (e->droite->type) (e->droite, c);
 }
-
+\end{verbatim}
+\label{sousshell}
+\begin{verbatim}
 /*
  * Traite l'expression SOUS_SHELL
  * En pratique on se contante de traiter l'expression de gauche
@@ -566,7 +569,9 @@ expr_sous_shell (Expression * e, Contexte * c)
 {
   return get_expr (e->gauche->type) (e->gauche, c);
 }
-
+\end{verbatim}
+\label{redirection}
+\begin{verbatim}
 /*
  * Traite l'expression REDIRECTION_I
  * on indique dans le contexte qu'il faudra utiliser à la place de
@@ -650,7 +655,9 @@ int (*get_intern (char* name)) (char**)
       return tab_cmd_intern[i].data;
   return NULL;
 }
-
+\end{verbatim}
+\label{echo}
+\begin{verbatim}
 /*
  * Commande permettant d'afficher des chaines de caractères
  */
@@ -673,7 +680,9 @@ int echo(char ** arg)
   printf("\n");
   return EXIT_SUCCESS;
 }
-
+\end{verbatim}
+\label{date}
+\begin{verbatim}
 /*
  * Commande affichant la date
  */
@@ -687,7 +696,9 @@ int date(char ** arg)
   return EXIT_SUCCESS;
 }
 
-
+\end{verbatim}
+\label{cd}
+\begin{verbatim}
 /*
  * Commande permettant de changer de répertoire courant
  */
@@ -707,7 +718,9 @@ int cd (char ** arg)
   return r;
 }
 
-
+\end{verbatim}
+\label{pwd et hostname}
+\begin{verbatim}
 /* 
  * Commande qui affiche le répertoire courant
  */
@@ -731,7 +744,9 @@ int hostname(char ** arg)
   return EXIT_SUCCESS;
 }
 
-
+\end{verbatim}
+\label{exit et kill}
+\begin{verbatim}
 /*
  * Commande permettant que quitter le shell
  */
@@ -782,7 +797,9 @@ int killShell (char ** arg)
   return ret;
 }
 
-
+\end{verbatim}
+\label{history}
+\begin{verbatim}
 /*
  * Commande qui affiche l'historique du shell. On peut l'appeler avec un argument
  * pour obtenir l'historique des n dernières commandes 
@@ -1050,7 +1067,10 @@ int remote_all(char ** param)
 				  
 
 \end{verbatim}
-
+\label{}
+\begin{verbatim}
+ 
+\end{verbatim}
 
 
 \end{document}
