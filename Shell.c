@@ -9,6 +9,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <sys/wait.h>
+#include <limits.h>
 
 extern int yyparse_string(char *);
 
@@ -122,18 +123,16 @@ expression_free(Expression *e)
   free(e);
 }
 
-/* Commande affichant le répertoire courant en jaune.
- * Cela permet de savoir dans quel dossier on se trouve
+/* 
+ * Commande renvoyant une chaine de caractères contenant le répertoire courant.
  */
-int printPwd() 
+char* getPwd() 
 {
-  char pwd[512];                   
-  getcwd(pwd, sizeof(pwd));
-  printf ("\x1b[33m%s \x1b[0m", pwd);
-  return 0;
+  char* pwd = malloc(PATH_MAX*sizeof(char));                   
+  getcwd(pwd, PATH_MAX);
+  return pwd;
 }
   
-
 
 /*
  * Lecture de la ligne de commande à l'aide de readline en mode interactif
@@ -148,8 +147,7 @@ my_yyparse(void)
     {
       char *line = NULL;
       char buffer[1024];
-      printPwd();
-      snprintf(buffer, 1024, "(%d):", status);
+      snprintf(buffer, 1024, "\x1b[33m%s\x1b[0m(%d)", getPwd(), status);    // affichage du répertoire courant en jaune
       line = readline(buffer);
       if(line != NULL)
 	{
