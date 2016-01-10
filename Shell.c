@@ -122,6 +122,9 @@ expression_free(Expression *e)
   free(e);
 }
 
+/* Commande affichant le répertoire courant en jaune.
+ * Cela permet de savoir dans quel dossier on se trouve
+ */
 int printPwd() 
 {
   char pwd[512];                   
@@ -227,9 +230,10 @@ my_yyparse(void)
       |       fichier vers lequel on redirige.						      |
       `--------------------------------------------------------------------------------------*/
 
-
-int
-main (int argc, char **argv)
+/* Fonction principale.
+ * 
+ */
+int main (int argc, char **argv)
 {
     for(int i=1; i<argc; i++)
 	if(strcmp("-r",argv[i])==0)
