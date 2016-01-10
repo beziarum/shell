@@ -54,6 +54,16 @@ fonctionnalité.
  et un pointeur de fonction reliant le type d'expréssion a la fonction de traitement
  qui lui est associé.
  
+ Pour finir nous avons créer la fonction get\_expr qui retourne la fonction associé au 
+ type de l'éxpréssion et l'appel en lui passant les parametres de l'éxpréssion et son 
+ contexte.
+ 
+ Ce travail préparatoire permettra de rendre beaucoup plus aisé la suite du développement
+ du projet
+ 
+ En effetl ne nous restait alors plus qu'a implémenté une fonction pour intégré le comportement
+ de chaque expréssion.
+ 
  \subsection{Commande simple en avant plan}
  
  L'éxécution de commande simple en avant plan est implémenté avec un simple fork().
@@ -61,10 +71,61 @@ fonctionnalité.
  avec ces parametres du coté de fils. Pendant ce temps le pere attend la fin de l'éxécution
  et récupére la valeur de retour de son fils.
  
+ \subsection{Commande simple en arriére plan}
+ 
+ Pour traité des commendes en arriére plan nous avons rajouter un champs background
+ a notre structure contexte qui passe a true si le caratere \& est interprété.
+ Ensuite il suffit de dire que dans se contexte on lance le fork() mais on attend pas
+ fin de l'éxécution du fils.
+ 
+ 
+ \subsection{Elimination des zombies}
+ 
+ 
  
 
 \newpage
 \section{Expression}
+
+Dans cette partie, le travail consiste a implémenté l'interprétation d'expression courante
+normalement utilisable avec bash tel que les redirection ">" ou les pipes "|".
+En réalité ces expréssion sont déja reconnu par le shell il ne nous reste plus qu'a utilisé
+nos structure pour relié chaque expréssion a son comportement spécifique et d'implémenté le
+dit comportement.
+
+Comme expliquer plus haut le gros travail préparatoire que nous avons éffectuer nous perméttra
+de traité avec une relative simplicité cette partie. En effet il nous suffira la plupart du temps 
+d'exploité l'arborescence deja implémenté dans le sujet, ainsi que nos structure, pour concevoir
+les différents comportement
+
+\subsection{Les séquences}
+
+Une expréssion séquenciel consiste a exécuté la commande de gauche puis celle de droite.
+Il nous suffit donc d'appeler dans l'ordre avec notre fonction get\_expr le fils gauche puis le fils
+droit de notre expréssion ";"
+
+\subsection{les expressions booleene}
+
+Nous avons suivit le meme principe pour les expression booleene. On apelle le fils gauche puis
+le fils droit de l'expression.
+A la diférence que le fils droit n'est appelé que si la commande gauche a bien été éxécuter dans le
+cas du "et".Et le fils droit n'est appelé que en cas d'échec du fils gauche dans le cas du "ou"
+
+\subsection{Les sous expréssions}
+
+Il s'agit sans doute de l'éxpréssion la plus simple a gerer. Il suffit d'appeler le fils
+gauche de l'expression. La gestion de l'arborescence fera le reste.
+
+\subsection{Les redirections}
+
+Pour gérer les redirections nous avons rajouter dans notre structure contexte des descripteur
+de fichier correspondant au entré et sortie standard des processus. Il nous suffit ensuite 
+d'ouvrir le fichier passé en prametre sur les bon descripteur et d'appeler la commande.
+Les entré et sortie seront ensuite remis a zero par notre fonction swapfd.
+
+\subsection{Les pipes}
+
+\subsection{Les expréssions recursives}
 
 
 \newpage
@@ -94,14 +155,15 @@ représenté un travail trés fastidieux.
  répertoire non existant).
  
  \subsubsection{pwd}
- Cette commande appelle la fonction getcwd qui copie le chemin absolu du répertoire courant dans un buffer.
- Le buffer est initialisé avec la taille PATH_MAX, qui est une maccro du fichier limites.h, et qui correspond à la taille maximale d'un chemin. 
- Il suffit ensuite d'afficher le buffer.
+ Cette commande appelle la fonction getcwd qui copie le chemin absolu du répertoire 
+ courant dans un buffer.
+ Le buffer est initialisé avec la taille PATH\_MAX, qui est une maccro du fichier limites.h,
+ et qui correspond à la taille maximale d'un chemin. Il suffit ensuite d'afficher le buffer.
  
  \subsubsection{hostname}
  Cette fonction a été implémentée d'une manière semblable à la fonction PWD.
 Tout d'abord, nous avons du récupérer le nom de l'hôte local grâce à l'appel système gethostname, qui copie ce nom dans un buffer. 
-La taille du buffer est initialisée à l'aide de la maccro HOST_NAME_MAX qui correspond à la taille maximale d'un nom de localhost. 
+La taille du buffer est initialisée à l'aide de la maccro HOST\_NAME\_MAX qui correspond à la taille maximale d'un nom de localhost. 
 On affiche ensuite ce dernier.
  
  \subsubsection{exit}
