@@ -250,6 +250,10 @@ int main (int argc, char **argv)
       status = evaluer_expr(ExpressionAnalysee);
       expression_free(ExpressionAnalysee);
 
+
+      //on exécute un waitpid non bloquant (WNOHANG)
+      //tant que sa valeur de retour vaut autre chose que 0 alors
+      //c'est le pid d'un processus qui c'est terminé
       int pid,status;
       while( (pid = waitpid(-1,&status,WNOHANG)) > 0)
 	  printf("le processus %d est fini (%d)\n",
