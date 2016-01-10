@@ -35,7 +35,7 @@ typedef struct assoc {
     int (*data) (char ** params);
 } assoc;
 
-
+/* Tableau associant les fonctionnalités des commandes internes avec les fonctions et les traitants */ 
 assoc tab_cmd_intern[] = {{"date", date},
 			  {"echo", echo},
 			  {"cd", cd},
@@ -94,9 +94,9 @@ int echo(char ** arg)
 int date(char ** arg)
 {
   char c[256]; 
-  time_t tmp = time(NULL);                              // on recupére le temps en seconde
-  struct tm * t =localtime(&tmp);                       // on génére une structure tm
-  strftime(c, sizeof(c), "%A %d %B %Y, %X (UTC%z)",t);  // on affiche celon le format français
+  time_t tmp = time(NULL);                              // on recupère le temps en secondes
+  struct tm * t =localtime(&tmp);                       // on génère une structure tm
+  strftime(c, sizeof(c), "%A %d %B %Y, %X (UTC%z)",t);  // on affiche selon le format français
   printf("%s\n", c);
   return 0;
 }
