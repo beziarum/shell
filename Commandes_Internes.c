@@ -395,10 +395,14 @@ int remote_all(char ** param)
     return EXIT_SUCCESS;
   }
   char * tmp = param[1];
-  for (int i=0; i<nb_machine; i++)           // pour chaque machine, on exécute cmd_simple avec le nom de la machine et les parametres
+  for (int i=0; i<nb_machine; i++)                          // pour chaque machine, on exécute cmd_simple avec le nom de la machine et les parametres
   {
-    param[1] = tab_machines[i]->name;         // le premier paramètre correspond au nom de la machine           
-    remote_cmd_simple(param);                 // on appelle ensuite cmd_simple avec le nom de la machine et la liste de paramètres.
+    param[1] = tab_machines[i]->name;                       // le premier paramètre correspond au nom de la machine  
+    if (remote_cmd_simple(param) == EXIT_FAILURE)           // on appelle ensuite cmd_simple avec le nom de la machine et la liste de paramètres.
+    {
+      perror("remote_cmd_simple");
+      return EXIT_FAILURE;
+    }
   }
   param[1] = tmp;
   return EXIT_SUCCESS;
