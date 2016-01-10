@@ -38,6 +38,7 @@ char **AjouterArg (char **, char *);
 char **InitialiserListeArguments (void);
 int LongueurListe(char **);
 void EndOfFile(void);
+void expression_free(Expression *e);
 
 void yyerror (char *s);
 Expression *ExpressionAnalysee;

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
@@ -302,7 +303,7 @@ int remote_localhost(char** param)
     expression_free(e);
     free(c);
     int status;
-    waitpid(get_last_pid(),&status,NULL);
+    waitpid(get_last_pid(),&status,0);
     return WIFEXITED(status) ? WEXITSTATUS(status) : 128 + WTERMSIG(status);
 }
 
@@ -413,7 +414,7 @@ int remote_cmd_simple(char** param)
     int ret= get_expr(PIPE)(e,c);
     expression_free(e);
     free(c);
-    return EXIT_SUCCESS;
+    return ret;
 }
 
 /* Fonction exécutant une commande sur le shell de toutes les machines connectées.
@@ -438,7 +439,7 @@ int remote_all(char ** param)
     }
     param[1] = tmp;
     for (int i=0; i<nb_machine; i++)
-	wait(pid[i],NULL,NULL);
+	waitpid(pid[i],NULL,0);
     return EXIT_SUCCESS;
 }
 				  
