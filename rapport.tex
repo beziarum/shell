@@ -83,7 +83,9 @@ la fin de l'exécution du fils.
  
  \subsection{Élimination des zombies}
 
- ...............paul
+ Pour éliminer les zombies causés par les commandes en arrière plan nous avons choisi d'effectuer
+ à chaque tours de boucles une série de wait non bloquant, cette série se terminant dès qu'un des
+ wait renvoie 0.
  
  \ref{main}
  
@@ -129,12 +131,19 @@ Les entrées et sorties seront ensuite remises à zéro par notre fonction "swap
 
 \subsection{Les pipes}
 
-........paul
+Un pipe est composé de deux commmande. La première sera exécuté en arrière plan et on changera
+sa sortie standard par l'entrée d'un pipe. Pour la seconde on a juste à remplacer son entrée par
+la sortie du pipe précédant. Ces deux parties ont été exécuté simplement en utilisant les
+redirections et l'arrière plan précédement codé. En plus de celà il fallait fermer les deux
+côtés du pipe dans le père, pour celà nous avons rajouté un champs dans la structure contexte.
 
 
 \subsection{Les expressions récursives}
 
-............paul
+Dès le début de la conception la structure de notre programme nous permettait d'abstraire l'ordre
+des expressions, et donc les séquences de commandes. Cette partie ne nous a donc pausé aucun problème :
+nous ne nous en somme jamais occupé, cette partie marchant dès le début.
+
 
 \newpage
 \section{Commande interne}
@@ -201,9 +210,15 @@ On affiche ensuite ce dernier.
  
  La difficulté de cette partie n'était pas tant l'implémentation des fonctions en elles mêmes,
  mais surtout le fait de rendre compatible tout ce qui avait été fait avant avec ces commandes.
- En effet les commandes internes n'utilisent pas de fork il faut donc gérer leurs comportements
- de manière particulière.
- ......................paul
+ En effet, en temps normal, les commandes internes n'utilisent pas de fork et ne permettent pas
+ de rendre la main au shell. Dans un premier temps nous avons donc envisagé d'utiliser des threads
+ pour exécuter les deux parties du programme en même temps. Cepandant les threads d'un même processus
+ se partageant le même tableau de descripteur de fichier, cette stratégie n'était pas compatible
+ avec la redirection de flux. Finalement nous avons décidé d'exécuter les commandes internes dans
+ un processus fils si elles devaient l'être en arrière plan.
+ Afin de ne pas nous encombrer d'une forêt de if ou d'un « switch/case » conséquent, nous avons
+ décidé de réutiliser un tableau d'association, mettant en relation le nom d'une commande interne
+ avec la fonction traitant cette commande.
  
  \ref{expr_simple}
  
