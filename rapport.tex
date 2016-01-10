@@ -48,7 +48,7 @@ fonctionnalités.
  
  Le début de ce projet avait déjà été bien entamé en tp. Nous nous sommes donc
  inspirés de ce qui avait été fait en classe. Nous avons créé une structure "contexte"
- qui contiendra à terme tous les éléments dont nous aurons besoin. 
+ qui contiendra à terme tous les éléments dont nous aurons besoin. \ref{Eval.h}
  
  Ensuite, nous avons implémenté une deuxième structure "assoc" qui possède un champ "expr\_t"
  et un pointeur de fonction reliant le type d'expression a la fonction de traitement
@@ -56,7 +56,7 @@ fonctionnalités.
  
  Pour finir, nous avons créé la fonction "get\_expr" qui retourne la fonction associée au 
  type de l'expression et l'appel en lui passant les paramètres de l'expression et son 
- contexte.
+ contexte.\ref{struct et fonctionnement}
  
  Ce travail préparatoire permettra de rendre beaucoup plus aisée la suite du développement
  du projet
@@ -69,7 +69,7 @@ fonctionnalités.
  L'exécution de commande simple en avant plan est implémentée avec un simple fork().
  On récupère les arguments de la commande rentrée et l'on fait un "execvp" de cette commande
  avec ces paramètres du côté de fils. Pendant ce temps le père attend la fin de l'exécution
- et récupère la valeur de retour de son fils.
+ et récupère la valeur de retour de son fils.\ref{expr_simple}
  
  \subsection{Commande simple en arrière plan}
  
@@ -81,6 +81,7 @@ la fin de l'exécution du fils.
  
  \subsection{Élimination des zombies}
 
+ ...............paul
  
  \ref{main}
  
@@ -97,7 +98,7 @@ dit comportement.
 Comme expliquer plus haut le gros travail préparatoire que nous avons effectué nous permettra
 de traiter avec une relative simplicité cette partie. En effet, il nous suffira la plupart du temps 
 d'exploiter l'arborescence déjà implémentée dans le sujet, ainsi que nos structures, pour concevoir
-les différents comportements.
+les différents comportements.\ref{autre expression}
 
 \subsection{Les séquences}
 
@@ -126,9 +127,12 @@ Les entrées et sorties seront ensuite remises à zéro par notre fonction "swap
 
 \subsection{Les pipes}
 
+........paul
+
+
 \subsection{Les expressions récursives}
 
-
+............paul
 
 \newpage
 \section{Commande interne}
@@ -199,14 +203,25 @@ On affiche ensuite ce dernier.
  de manière particulière.
  ......................paul
  
+ \ref{expr_simple}
+ 
 
 \newpage
 \section{Remote Shell}
 
+..........paul
+
+
 \ref{remote shell}
+
+
+
+
 
 \newpage
 \section{Conclusion}
+
+
 
 \newpage
 \section{Annexes}
@@ -214,6 +229,7 @@ On affiche ensuite ce dernier.
 Ci-joint en annexes le code source du projet. Nos fichiers sont disponible sur dépot git suivant:
  \href{https://github.com/beziarum/shell.git}{ici}.
 
+ 
 \subsection{Shell.c}
 \label{main}
 \begin{alltt}
@@ -223,10 +239,23 @@ Ci-joint en annexes le code source du projet. Nos fichiers sont disponible sur d
 
 \subsection{Evaluation.c}
 
+\subsubsection{Structure et fonctionnement}
+\label{struct et fonctionnement}
 \begin{alltt}
  
 \end{alltt}
 
+\subsubsection{Expression simple}
+\label{expr_simple}
+\begin{alltt}
+ 
+\end{alltt}
+
+\subsubsection{Autre Expressions}
+\label{autre expression}
+\begin{alltt}
+ 
+\end{alltt}
 
 \subsection{Evaluation.h}
 \label{Eval.h}
