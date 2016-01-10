@@ -304,7 +304,7 @@ int remote_add(char** param)
   int i=1;
   while(param[i] != NULL){
     remote_machine  rm;
-    rm.name=param[i];
+    rm.name=strdup(param[i]);
     if(i>tab_length){
       tab_machines=realloc(tab_machines,sizeof(remote_machine*)*(tab_length*2));
       tab_length*=2;
@@ -355,4 +355,28 @@ int remote_list(char ** param)
     for (int i=0; i<nb_machine; i++)
       printf("%s\n", tab_machines[i]->name);
   return 0;
+}
+
+int remote_cmd_simple(char** param)
+{
+    remote_machine* lmachine=NULL;
+    param++;
+    for(int i=0;i<tab_length;i++)
+    {
+	if(tab_machines[i]!=NULL && strcmp(tab_machines[i]->name,*param))
+	{
+	    lmachine=tab_machines[i];
+	    break;
+	}
+    }
+
+    param++;
+    while(*param!=NULL)
+    {
+	write(lmachine->fd,*param,strlen(*param));
+	write(lmachine->fd," ",1);
+	param++;
+    }
+    write(lmachine->fd,"\n",1);
+    return EXIT_SUCCESS;
 }
