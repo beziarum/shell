@@ -56,7 +56,10 @@ void verifier(int b,char* m)
     perror(m);
 }
 
-
+/*
+ * renvoi un pointeur vers la fonction traitant la commande
+ * interne passée en paramètre si elle existe, NULL sinon
+ */
 int (*get_intern (char* name)) (char**)
 {
   int taille_tab_cmd_intern = sizeof (tab_cmd_intern)/sizeof(assoc);
@@ -250,7 +253,10 @@ assoc tab_remote[] = {{"localhost", remote_localhost},
 		      {"all", remote_all},
 		      {"list", remote_list}};
 
-
+/*
+ * fonction interne remote, elle se contente d'appeler la fonction s'occupant de la 
+ * sous-commande correspondant à la commande actuelle
+ */
 int remote(char** params)
 {
     int (*cmd_remote) (char**)=get_remote(params[1]);
@@ -263,6 +269,10 @@ int remote(char** params)
     }
 }
 
+/*
+ * parcourt le tableau d'association, renvoi la fonction s'ocupant de « remote
+ * <name> » si elle existe, sinon remote_cmd_simple
+ */
 int (*get_remote (char* name)) (char**) 
 {
   int taille_tab_remote = sizeof (tab_remote)/sizeof(assoc);
@@ -277,28 +287,29 @@ int (*get_remote (char* name)) (char**)
  */
 int remote_localhost(char** param)
 {
-    char** param_remote=malloc(3*sizeof(char**));
+    char** param_remote=malloc(3*sizeof(char**));//on créé la liste de la commande à exécuter ("./Shell -r")
     param_remote[0]=strdup("./Shell");
     param_remote[1]=strdup("-r");
     param_remote[2]=NULL;
     
-    Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_remote);
+    Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_remote);//on construit l'expression
     e=ConstruireNoeud(BG,e,NULL,NULL);
     Contexte* c=malloc(sizeof(Contexte));
+    
     initialiser_contexte(c);
     int tube[2];
     pipe(tube);
     c->fdin=tube[0];
     c->fdclose=tube[1];
     param+=2;
-    while(*param!=NULL)
+    while(*param!=NULL)//on écrit les paramètres de la fonction sur l'entrée du nouveau shell
     {
 	write(tube[1],*param,strlen(*param));
 	write(tube[1]," ",1);
 	param++;
     }
     write(tube[1],"\n",1);
-    get_expr(BG)(e,c);
+    get_expr(BG)(e,c);//et on l'exécute
     close(tube[1]);
     expression_free(e);
     free(c);
@@ -308,9 +319,7 @@ int remote_localhost(char** param)
 }
 
 /* 
- * Commande exécutant un shell distant controlé sur une plusieurs machines via une connexion ssh. 
- * La fonction ajoute ensuite les machines dans le tableau global tab_machines
- * On lancera la commande en rentrant une ou plusieurs machines en paramètre.
+ * Ajoute les noms passés en paramètres à la liste des machines.
  */
 
 int remote_add(char** param)
@@ -345,7 +354,9 @@ int remote_add(char** param)
     return EXIT_SUCCESS;
 }
 
-
+/*
+ *supprime les machines existantes du tableau
+ */
 int remote_remove(char ** param) 
 {
   for (int i=0; tab_machines[i]; i++) 
@@ -381,8 +392,8 @@ int remote_list(char ** param)
 int remote_cmd_simple(char** param)
 {
     remote_machine* lmachine=NULL;
-    param++;
-    for(int i=0;i<nb_machine;i++)
+    param++;//on saute le premier paramèter (toujours remote)
+    for(int i=0;i<nb_machine;i++)//on cherche si la machine est enregistrée
     {
 	if(tab_machines[i]!=NULL && strcmp(tab_machines[i]->name,*param)==0)
 	{
@@ -390,38 +401,38 @@ int remote_cmd_simple(char** param)
 	    break;
 	}
     }
-    if (!lmachine) 
+    if (!lmachine) //si non on s'arète
     {
       fprintf(stderr,"aucune machine de ce nom n'est présente dans la liste.\nUtilisez remote list pour obtenir la liste\n");
       return EXIT_FAILURE;
     }
-    param++;
+    param++;//on saute le deuxième paramètre (c'est à dire le nom de la machine)
     
     
-    char** param_ssh=InitialiserListeArguments();
+    char** param_ssh=InitialiserListeArguments();//on va lancer notre shell en mode distant via ssh
     param_ssh=AjouterArg(param_ssh,"ssh");
     param_ssh=AjouterArg(param_ssh,lmachine->name);
     param_ssh=AjouterArg(param_ssh,"./Shell -r");
 
-    char** param_echo=InitialiserListeArguments();
+    char** param_echo=InitialiserListeArguments();//lui passer les paramètres via echo
     param_echo=AjouterArg(param_echo,"echo");
     while(*param!=NULL)
 	param_echo=AjouterArg(param_echo,*(param++));
     
-    char** param_xcat=InitialiserListeArguments();
+    char** param_xcat=InitialiserListeArguments();//et afficher en local le tout avec xcat
     param_xcat=AjouterArg(param_xcat,"./xcat.sh");
-    param_xcat=AjouterArg(param_xcat,"-hold");
-    param_xcat=AjouterArg(param_xcat,"-T");
+    param_xcat=AjouterArg(param_xcat,"-hold");//on ne ferme pas à la fin du programme (sinon on a pas le temps de lire les résultats)
+    param_xcat=AjouterArg(param_xcat,"-T");//le titre est le nom de la machine
     param_xcat=AjouterArg(param_xcat,lmachine->name);
     
-    Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_ssh);
+    Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_ssh);     //on construit les trois commandes
     Expression* echo=ConstruireNoeud(SIMPLE,NULL,NULL,param_echo);
     Expression* xcat=ConstruireNoeud(SIMPLE,NULL,NULL,param_xcat);
-    e=ConstruireNoeud(PIPE,echo,e,NULL);
-    e=ConstruireNoeud(PIPE,e,xcat,NULL);
+    e=ConstruireNoeud(PIPE,echo,e,NULL);//on pipe echo sur ssh
+    e=ConstruireNoeud(PIPE,e,xcat,NULL);//et ssh sur xcat
     Contexte* c=malloc(sizeof(Contexte));
     initialiser_contexte(c);
-    int ret= get_expr(PIPE)(e,c);
+    int ret= get_expr(PIPE)(e,c);//on exécute enfin le tout
     expression_free(e);
     free(c);
     return ret;
