@@ -95,19 +95,14 @@ int expr_simple (Expression* e, Contexte* c)
 	appliquer_contexte(c,true);  //on applique le contexte
 	int ret=intern(e->arguments);//on exécute la commande interne
 	appliquer_contexte(c,false); //et on restaure le contexte
-	if(c->ispipped)
-	    exit(ret);
-	else
-	    return ret;
+	return ret;
 	    
     }
     else
-    { //pour le fils…
+    { 
 	pid_t pid;
-	if(!c->ispipped)
-	    pid=fork();
-	if(pid==0 || c->ispipped)
-	{
+	if(pid==0)
+	{ //pour le fils…
 	    appliquer_contexte(c,false); //on applique le contexte
 	    if(intern != NULL) //si c'est une commande interne
 	    {
@@ -264,7 +259,6 @@ void initialiser_contexte(Contexte* c)
   c->fdout=STDOUT_FILENO;
   c->fderr=STDERR_FILENO;
   c->fdclose=-1;
-  c->ispipped=false;
   c->tube=NULL;
 }
 
@@ -278,7 +272,6 @@ void copier_contexte(Contexte* c1, Contexte* c2)
     c2->fdout=c1->fdout;
     c2->fderr=c1->fderr;
 	c2->fdclose=c1->fdclose;
-    c2->ispipped=c1->ispipped;
     c2->tube=c1->tube;
 }
 
