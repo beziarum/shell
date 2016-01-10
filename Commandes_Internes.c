@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
@@ -85,7 +86,7 @@ int echo(char ** arg)
       }
     }
   printf("\n");
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 /*
@@ -98,7 +99,7 @@ int date(char ** arg)
   struct tm * t =localtime(&tmp);                       // on génère une structure tm
   strftime(c, sizeof(c), "%A %d %B %Y, %X (UTC%z)",t);  // on affiche selon le format français
   printf("%s\n", c);
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 
@@ -130,7 +131,7 @@ int pwd(char ** arg)
   char pwd[PATH_MAX];
   getcwd(pwd, sizeof(pwd));
   printf("%s\n", pwd);
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 
@@ -142,7 +143,7 @@ int hostname(char ** arg)
   char hostname[HOST_NAME_MAX +1];
   gethostname(hostname,sizeof(hostname));
   printf("Hostname : %s\n", hostname);
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 
@@ -168,7 +169,7 @@ int killShell (char ** arg)
   {
     errno=EINVAL;
     perror("kill");
-    return -1;
+    return EXIT_FAILURE;
   }
   int ret;
   if (arg[1][0]!= '-')
@@ -207,7 +208,7 @@ int history(char ** arg)
   {
     errno=EINVAL;
     perror("history");
-    return -1;
+    return EXIT_FAILURE;
   }
   HIST_ENTRY ** hystory_list = history_list ();                       // on crée une variable contenant l'historique
   int treshold = history_length;
@@ -215,7 +216,7 @@ int history(char ** arg)
     treshold = atoi(arg[1]) +1;
   for (int i = history_length - treshold; i < history_length; i++)    // on affiche les n derniers rangs de l'historique (sans compter la commande history qu'on vient de lancer)
     printf ("%d: %s\n", i + history_base, hystory_list[i]->line);
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 //partie remote
@@ -258,7 +259,7 @@ int remote(char** params)
     else
     {
 	fprintf(stderr,"sous commande de remote inconnue (%s)\n",params[1]);
-	return 1;
+	return EXIT_FAILURE;
     }
 }
 
@@ -302,7 +303,7 @@ int remote_localhost(char** param)
     expression_free(e);
     free(c);
     int status;
-    waitpid(get_last_pid(),&status,NULL);
+    waitpid(get_last_pid(),&status,0);
     return WIFEXITED(status) ? WEXITSTATUS(status) : 128 + WTERMSIG(status);
 }
 
@@ -331,7 +332,7 @@ int remote_add(char** param)
 	i++;
     }
     nb_machine+=nb_add_machines;
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 
@@ -343,7 +344,7 @@ int remote_remove(char ** param)
     free(tab_machines[i]);
   }
   nb_machine=0;
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 
@@ -354,8 +355,8 @@ int remote_list(char ** param)
 {
   if (nb_machine == 0)
   {
-    fprintf(stderr,"Il n'y a actuellement aucune machine dans la liste des machines distantes connectées.\nUtilisez remote add pour ajouter des machines.");
-    return EXIT_FAILURE;
+    fprintf(stderr,"Il n'y a actuellement aucune machine dans la liste des machines distantes connectées.\nUtilisez remote add pour ajouter des machines.\n");
+    return EXIT_SUCCESS;
   }
   else 
     for (int i=0; i<nb_machine; i++)
@@ -381,7 +382,7 @@ int remote_cmd_simple(char** param)
     }
     if (!lmachine) 
     {
-      fprintf(stderr,"aucune machine de ce nom n'est présente dans la liste.\nUtilisez remote list pour obtenir la liste");
+      fprintf(stderr,"aucune machine de ce nom n'est présente dans la liste.\nUtilisez remote list pour obtenir la liste\n");
       return EXIT_FAILURE;
     }
     param++;
@@ -413,7 +414,7 @@ int remote_cmd_simple(char** param)
     int ret= get_expr(PIPE)(e,c);
     expression_free(e);
     free(c);
-    return EXIT_SUCCESS;
+    return ret;
 }
 
 /* Fonction exécutant une commande sur le shell de toutes les machines connectées.
@@ -438,7 +439,7 @@ int remote_all(char ** param)
     }
     param[1] = tmp;
     for (int i=0; i<nb_machine; i++)
-	wait(pid[i],NULL,NULL);
+	waitpid(pid[i],NULL,0);
     return EXIT_SUCCESS;
 }
 				  

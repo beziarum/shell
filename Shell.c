@@ -167,8 +167,6 @@ my_yyparse(void)
   else
     {
       // pour le mode distant par exemple
-      
-      int ret; int c;
           
       char *line = NULL;
       size_t linecap = 0;
