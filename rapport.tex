@@ -3,7 +3,6 @@
 \usepackage[T1]{fontenc} 
 \usepackage[utf8]{inputenc}
 \usepackage[francais]{babel}
-\usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{color}
@@ -83,7 +82,7 @@ la fin de l'exécution du fils.
  \subsection{Élimination des zombies}
 
  
- 
+ \ref{main}
  
 
 \newpage
@@ -139,7 +138,7 @@ commandes dans notre Shell. Ces commandes n'étaient pas très difficiles à imp
 du temps, il suffisait de trouver le bon appel système à utiliser. À noter tout de même
 que nous n'avons implémenté que les fonctionnalités de base offertes par ces commandes, nous
 ne nous sommes pas amusés à ajouter la gestion de tous les paramètres, ce qui aurait 
-représenté un travail très fastidieux.
+représenté un travail très fastidieux.\ref{cmd_de_base}
 
 \subsection{Fonction}
 \subsubsection{echo}
@@ -199,27 +198,24 @@ On affiche ensuite ce dernier.
  En effet les commandes internes n'utilisent pas de fork il faut donc gérer leurs comportements
  de manière particulière.
  ......................paul
+ 
 
 \newpage
 \section{Remote Shell}
 
-
+\ref{remote shell}
 
 \newpage
 \section{Conclusion}
 
-
-\newpage
-\bibliographystyle{alpha}
-\bibliography{biblio}
-
 \newpage
 \section{Annexes}
 
-Ci-joint en annexes le code source du projet.
+Ci-joint en annexes le code source du projet. Nos fichiers sont disponible sur dépot git suivant:
+ \href{https://github.com/beziarum/shell.git}{ici}.
 
 \subsection{Shell.c}
-
+\label{main}
 \begin{alltt}
  
 \end{alltt}
@@ -233,21 +229,27 @@ Ci-joint en annexes le code source du projet.
 
 
 \subsection{Evaluation.h}
-
+\label{Eval.h}
 \begin{alltt}
  
 \end{alltt}
 
+\subsection{Commandes-internes.c}
 
-\subsection{Commandes_internes.c}
-
+\subsubsection{Les commandes internes de bases}
+\label{cmd_de_base}
 \begin{alltt}
  
 \end{alltt}
 
+\subsubsection{remote shell}
+\label{remote shell}
+\begin{alltt}
+ 
+\end{alltt}
 
-\subsection{Commandes_internes.h}
-
+\subsection{Commandes-internes.h}
+\label{cmd_interne.h}
 \begin{alltt}
  
 \end{alltt}
