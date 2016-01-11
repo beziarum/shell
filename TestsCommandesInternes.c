@@ -1,1 +1,0 @@
-/* Fichier effectuant des tests sur les commandes internes */
