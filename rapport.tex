@@ -3,12 +3,11 @@
 \usepackage[T1]{fontenc} 
 \usepackage[utf8]{inputenc}
 \usepackage[francais]{babel}
-\usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{color}
 \usepackage[usenames,dvipsnames]{xcolor}
-\usepackage{alltt}
+\usepackage{verbatim}
 \usepackage{tocbibind}
 
 
@@ -20,11 +19,1126 @@
 \tableofcontents
 
 \newpage
+\section{Présentation}
 
-\section{Le projet}
-\subsection{Présentation}
-tamere
+L'objectif de ce projet était d'implémenter un Shell capable d'interpréter les expressions de base
+utilisables avec bash et d'exécuter des processus. Toutefois, une bonne partie du code du Shell
+nous était déjà fourni. Tout l'aspect de l'analyse syntaxique était déjà implémenté dans les fichiers
+donnés dans le sujet.\newline
 
+On peut diviser le travail à effectuer en 4 parties :
+\begin{itemize}
+ \item Implémenter la possibilité pour notre Shell d'exécuter des
+ commandes externes ou des programmes en tout genre n'appartenant pas au Shell
+ \item Donner au Shell la capacité d'interpréter les expressions courantes
+ utilisables sous bash, comme les redirections ou les pipes
+ \item Écrire un certain nombre de commandes interne (des fonctions appartenant
+ au Shell en lui-même) tout en faisant attention à les rendre utilisables avec
+ les expressions précédemment citées.
+ \item L'implémentation d'une commande interne "remote" qui nous permettra d'exécuter
+ et contrôler des shells distants en utilisant une connection ssh.\newline 
+\end{itemize}
+
+Nous verrons au travers de ce rapport comment nous avons choisi d'implémenter ces différentes
+fonctionnalités.
+
+
+\newpage
+
+\section{Commande externe}
+ 
+ Le début de ce projet avait déjà été bien entamé en tp. Nous nous sommes donc
+ inspirés de ce qui avait été fait en classe. Nous avons créé une structure "contexte"
+ qui contiendra à terme tous les éléments dont nous aurons besoin. \ref{Eval.h}
+ 
+ Ensuite, nous avons implémenté une deuxième structure "assoc" qui possède un champ "expr\_t"
+ et un pointeur de fonction reliant le type d'expression à la fonction de traitement
+ qui lui est associé.
+ 
+ Pour finir, nous avons créé la fonction "get\_expr" qui retourne la fonction associée au 
+ type de l'expression que nous appelons en lui passant les paramètres de l'expression et son 
+ contexte.\ref{struct et fonctionnement}
+ 
+ Ce travail préparatoire permettra de rendre beaucoup plus aisée la suite du développement
+ du projet.
+ 
+ En effet, il ne nous restait alors plus qu'à implémenter une fonction pour intégrer le comportement
+ de chaque expression.
+ 
+ \subsection{Commande simple en avant-plan}
+ 
+ L'exécution de commandes simples en avant plan est implémentée avec un simple fork().
+ On récupère les arguments de la commande rentrée et l'on fait un "execvp" de cette commande
+ avec ses paramètres du côté de fils. Pendant ce temps le père attend la fin de l'exécution
+ et récupère la valeur de retour de son fils.\ref{expr_simple}
+ 
+ \subsection{Commande simple en arrière plan}
+ 
+ Pour traiter des commandes en arrière-plan, nous avons rajouté un champ "background"
+à notre structure contexte qui passe à vraie si le caractère \& est interprété.
+ Ensuite, il suffit de dire que dans ce contexte on lance le fork() mais on n’attend pas
+la fin de l'exécution du fils.\ref{autre expression}
+ 
+ 
+ \subsection{Élimination des zombies}
+
+ Pour éliminer les zombies causés par les commandes en arrière plan nous avons choisi d'effectuer
+ à chaque tours de boucles une série de wait non bloquant, cette série se terminant dès qu'un des
+ wait renvoie 0. \ref{main}
+ 
+
+\newpage
+\section{Expression}
+
+Dans cette partie, le travail consiste à implémenter l'interprétation d'expressions courantes
+normalement utilisables avec bash telles que les redirections ">" ou les pipes "|".
+En réalité, ces expressions sont déjà reconnues par le Shell. Il ne nous reste plus qu'à utiliser
+nos structures pour relier chaque expression à son comportement spécifique et d'implémenter ledit comportement.
+
+Comme expliqué plus haut, le gros travail préparatoire que nous avons effectué nous permettra
+de traiter avec une relative simplicité cette partie. En effet, il nous suffira la plupart du temps 
+d'exploiter l'arborescence déjà implémentée dans le sujet, ainsi que nos structures, pour concevoir
+les différents comportements.\ref{autre expression}
+
+\subsection{Les séquences}
+
+Une expression séquentielle consiste à exécuter la commande de gauche puis celle de droite.
+Il nous suffit donc d'appeler dans l'ordre avec notre fonction "get\_expr" le fils gauche puis le fils
+droit de notre expression ";".\ref{autre expression}
+
+\subsection{les expressions booleene}
+
+Nous avons suivi le même principe pour les expressions booléennes. On appelle le fils gauche puis
+le fils droit de l'expression.
+À la différence que le fils droit n'est appelé que si la commande gauche a bien été exécutée dans le
+cas du "et". Dans le cas du "ou", le fils droit n'est appelé qu’en cas d'échec du fils gauche.\ref{et et ou}
+
+\subsection{Les sous-expressions}
+
+Il s'agit sans doute de l'expression la plus simple à gérer. Il suffit d'appeler le fils
+gauche de l'expression. La gestion de l'arborescence fera le reste.\ref{sousshell}
+
+\subsection{Les redirections}
+
+Pour gérer les redirections, nous avons rajouté dans notre structure contexte des descripteurs
+de fichier correspondant aux entrées et sortie standard des processus. Il nous suffit ensuite 
+d'ouvrir le fichier passé en paramètre sur les bons descripteurs et d'appeler la commande.
+Les entrées et sorties seront ensuite remises à zéro par notre fonction "swapfd". \ref{redirection}
+
+\subsection{Les pipes}
+
+Un pipe est composé de deux commmandes. La première sera exécutée en arrière plan et on changera
+sa sortie standard par l'entrée d'un pipe. Pour la seconde, on a juste à remplacer son entrée par
+la sortie du pipe précédent. Ces deux parties ont été exécutées simplement en utilisant les
+redirections et l'arrière plan précédemment codés. En plus de celà, il fallait fermer les deux
+côtés du pipe dans le père, pour celà nous avons rajouté un champ dans la structure contexte.\ref{pipe}
+
+
+\subsection{Les expressions récursives}
+
+Dès le début de la conception, la structure de notre programme nous permettait d'abstraire l'ordre
+des expressions, et donc les séquences de commandes. Cette partie ne nous a donc pausé aucun problème :
+nous ne nous en somme jamais occupé, cette partie marchant dès le début.
+
+
+\newpage
+\section{Commande interne}
+
+Dans cette partie, nous avons dû implémenter directement le comportement de quelques
+commandes dans notre Shell. Ces commandes n'étaient pas très difficiles à implémenter. La plupart
+du temps, il suffisait de trouver le bon appel système à utiliser. À noter tout de même
+que nous n'avons implémenté que les fonctionnalités de base offertes par ces commandes, nous n'avons pas ajouté la gestion de tous les paramètres, ce qui aurait 
+représenté un travail très fastidieux.\ref{cmd_de_base}
+
+\subsection{Fonction}
+\subsubsection{echo}
+ La commande "echo" n'est rien d'autre qu'une fonction qui écrit les paramètres qu'elle reçoit
+ sur la sortie standard. Un simple printf suffit pour cette commande. \ref{echo}
+ 
+\subsubsection{date}
+ Pour cette commande, nous avons dû faire quelques recherches sur les fonctions fournies par la librairie "time".
+ Nous avons décidé de créer une structure "tm" et d'utiliser la fonction "strftime" qui
+ sert justement à afficher l'heure selon son propre format qu'on peut définir à la volée. \ref{date}
+ 
+ \subsubsection{cd}
+ La commande "cd" a requis d'utiliser l'appel système "chdir" qui ouvre le répertoire passé en paramètre
+ Nous avons veillé à récupérer la variable d'environnement "HOME" avec getenv pour les cas ou "cd" est
+ appelé sans paramètre. Nous avons également tenté de prévenir d'éventuelles erreurs(comme les
+ répertoires non existants). \ref{cd}
+ 
+ \subsubsection{pwd}
+ Cette commande appelle la fonction getcwd qui copie le chemin absolu du répertoire 
+ courant dans un buffer.
+ Le buffer est initialisé avec la taille PATH\_MAX, qui est une macro du fichier limites.h,
+ et qui correspond à la taille maximale d'un chemin. Il suffit ensuite d'afficher le buffer. \ref{pwd et hostname}
+ 
+ \subsubsection{hostname}
+ Cette fonction a été implémentée d'une manière semblable à la fonction PWD.
+Tout d'abord, nous avons du récupérer le nom de l'hôte local grâce à l'appel système gethostname, qui copie ce nom dans un buffer. 
+La taille du buffer est initialisée à l'aide de la macro HOST\_NAME\_MAX qui correspond à la taille maximale d'un nom de localhost. 
+On affiche ensuite ce dernier. \ref{pwd et hostname}
+ 
+ \subsubsection{exit}
+ La commande exit permet de quitter le Shell. 
+ Elle peut être exécutée avec ou sans paramètres. 
+ S'il n'y a pas de paramètre, on ferme le Shell en renvoyant la valeur 0. 
+ Sinon, on ferme le Shell en renvoyant la valeur entière du premier paramètre. Il est donc inutile de donner plusieurs paramètres à cette commande. \ref{exit et kill}
+ 
+ \subsubsection{kill}
+ Pour la commande kill nous avons simplement utilisé l'appel système kill. 
+ Notre commande peut gérer le paramètre de choix du signal à envoyer. Il peut l'envoyer à tous les processus
+ rentrés en paramètres.
+ Pour gérer l'erreur en cas d'absence de paramètres nous avons touché directement à la valeur
+ de errno la passant à EINVAL (invalid argument). \ref{exit et kill}
+ 
+ \subsubsection{history}
+ La commande history renvoie l'historique des commandes entrées par l'utilisateur. 
+ Elle nécessite la gestion d'un historique dans le Shell. 
+ Pour cela il a fallu inclure le fichier history.h permettant d'utiliser un historique. 
+ Pour ce faire, on appelle dans un premier temps la fonction using\_history dans le main avant la boucle principale.
+ Ainsi on pourra utiliser les fonctions de gestions d'historique. 
+ À chaque fois qu'une fonction est exécutée, elle est ajoutée à l'historique grâce à la fonction add\_history. 
+ Ensuite, notre fonction history récupère la liste des fonctions appelées, et les affiches une par une. 
+ On peut également exécuter la commande avec un argument n, pour afficher uniquement les n dernières commandes. \ref{history}
+ 
+ \subsection{Intégration au Shell}
+ 
+ La difficulté de cette partie n'était pas tant l'implémentation des fonctions en elles mêmes,
+ mais surtout le fait de rendre compatible tout ce qui avait été fait avant avec ces commandes.
+ En effet, en temps normal, les commandes internes n'utilisent pas de fork et ne permettent pas
+ de rendre la main au shell. Dans un premier temps nous avons donc envisagé d'utiliser des threads
+ pour exécuter les deux parties du programme en même temps. Cepandant les threads d'un même processus
+ se partageant le même tableau de descripteur de fichier, cette stratégie n'était pas compatible
+ avec la redirection de flux. Finalement nous avons décidé d'exécuter les commandes internes dans
+ un processus fils si et seulement si elles devaient l'être en arrière plan.
+ Afin de ne pas nous encombrer d'une forêt de if ou d'un « switch/case » conséquent, nous avons
+ décidé de réutiliser un tableau d'association, mettant en relation le nom d'une commande interne
+ avec la fonction traitant cette commande.  \ref{expr_simple}
+ 
+
+\newpage
+\section{Remote Shell}
+
+La commande interne «~remote~» doit permetre d'exécuter simplement des commandes sur une machine
+distante ou sur un ensemble de machines distantes en utilisant une connection ssh en interne. Dans un premier 
+temps nous avons essayé d'ouvrir la connection dès le «~remote add~», comme suggéré dans le 
+sujet, mais nous nous sommes très rapidement retrouvés confrontés à plusieurs problèmes parmis lesquels
+la difficulté pour savoir quand une commande distante était terminée, et donc quand
+il fallait rendre la main au shell. Nous avons alors décidé de n'établire la connection qu'au moment
+d'exécuter une des commandes distantes, et de la fermer après la fin de cette dernière.\newline
+
+Une machine n'est donc représenté que par son nom, Bien que nous ayons gardé en pratique une
+structure pour la représenter, n'étant pas sûr de la façon dont notre code allait évoluer et
+donc si nous n'allions pas avoir besoin de sauvegarder plus d'informations que simplement le
+nom de la machine distante. \ref{remote shell}
+
+
+\subsection{Shell faussement distant}
+
+Nous avons tout d'abord créé une commande «~remote localhost~» qui ne lançait pas la commande
+suivante via ssh mais en local, en utilisant cepandant notre shell en tant qu'interface entre le shell
+controlé par l'utilisateur et le programme demandé. Pour (re)lancer notre shell, nous construisons une
+expression demandant à lancer notre shell avec l'option -r qui active le mode distant. La commande
+“distante” est lancée en ayant écrit dans un pipe branché sur l'entrée du nouveau shell. \ref{localhost}
+
+\subsection{Gestion des listes (add, remove et list)}
+
+Les deux premières commandes ont d'abord été pensées pour gérer respectivement l'initialialisation
+et la fermeture du shell distant, ce qui complexifiait particulièrement leur structure. Par la
+suite, ayant décidé de n'effectuer ces actions qu'au moment d'exécuter une commande distante, nous
+avons pu les simplifiers.\ref{remote add}
+
+\subsection{Exécution distante}
+
+Pour cette partie nous avons principalement réutilisé le code créé pour le shell faussement
+distant. En effet nous avons repris l'idée de créé une expression valide et de l'exécuter à l'aide
+de la première partie du programme. simplement au lieu de lancer notre shell nous lançons ssh en
+précisant dans les paramètre le programme à appeler, c'est à dire notre propre shell, et nous appelons
+le programme demandé en écrivant via un pipe dans l'entrée standard de ssh, donc de notre shell distant. \ref{remotecmdsmpl}
+
+\subsection{xcat}
+
+Cette dernière partie a finalement été traitée facilement : il nous a suffit de piper la sortie de ssh
+sur l'entrée du programme xcat.sh, en donnant à ce dernier les paramètres nécessaires pour qu'il ne se coupe pas
+sitôt ssh finit et qu'il affiche en titre le nom de la machine sur laquelle la commande a été exécutée
+
+
+
+
+\newpage
+\section{Conclusion}
+
+Notre plus grande réussite dans ce projet est très clairement le travail effectué au
+début du projet. En effet, nous avons su tout de suite préparer un terrain propice au
+développement de notre shell. Notamment grâce à l'implémentation de notre système de structure et 
+de fonction définissant le comportement des expressions.
+La preuve en est qu'une fois arrivé à l'étape de la gestion de la récursivité des expressions, 
+cette option était en fait déjà fonctionnelle depuis le début.\newline
+
+Si les trois premières parties du développement ne nous ont pas trop posé de problème, ce n'est
+pas le cas de la dernière visant à contrôler les shell distants dont nous sommes moins satisfaits.
+Outre les difficultés que nous avons rencontrées, nous ne sommes pas certains que le résultat obtenu
+soit clairement celui attendu. Ce qui est particulièrement frustrant dans la mesure ou cette partie
+nous a demandé plus de travail que les trois autres réunies.\newline
+
+Ce projet nous a permis de renforcer nos notions en programmation-système. Ainsi que de mieux
+cerner le fonctionnement d'un shell. Nous en avons également profité pour renouer avec latex,
+pendant la rédaction du rapport, dont les performances nous satisfont grandement.
+
+
+\newpage
+\section{Annexes}
+
+Ci-joint en annexes le code source du projet. Nos fichiers sont disponible sur le dépot git suivant:
+ \href{https://github.com/beziarum/shell.git}{ici}.
+
+ \scriptsize
+\subsection{Shell.c}
+\label{main}
+\begin{verbatim}
+
+ int main (int argc, char **argv)
+{
+    for(int i=1; i<argc; i++)
+	if(strcmp("-r",argv[i])==0)
+	    interactive_mode=false;
+    using_history();
+  while (1){
+    if (my_yyparse () == 0) {  /* L'analyse a abouti */
+      fflush(stdout);
+      status = evaluer_expr(ExpressionAnalysee);
+      expression_free(ExpressionAnalysee);
+
+
+      //on exécute un waitpid non bloquant (WNOHANG)
+      //tant que sa valeur de retour vaut autre chose que 0 alors
+      //c'est le pid d'un processus qui c'est terminé
+      int pid,status;
+      while( (pid = waitpid(-1,&status,WNOHANG)) > 0)
+	  printf("le processus %d est fini (%d)\n",
+		 pid,
+		 WIFEXITED(status) ? WEXITSTATUS(status) : 128+WTERMSIG(status));
+    }
+    else {
+    }
+  }
+  return 0;
+}
+\end{verbatim}
+
+
+\subsection{Évaluation.c}
+
+\subsubsection{Structure et fonctionnement}
+\label{struct et fonctionnement}
+\begin{verbatim}
+ typedef struct assoc
+{
+  expr_t expr;
+  int (*data) (Expression *, Contexte *);
+} assoc;
+
+pid_t lpid = 0;
+
+/* Tableau permettant d'associer un type d'expréssion avec la fonction qui la traite */
+assoc tab_expr[] = { {SIMPLE, expr_simple},
+		     {BG, expr_bg},
+		     {SEQUENCE, expr_sequence},
+		     {SEQUENCE_ET, expr_sequence_et},
+		     {SEQUENCE_OU, expr_sequence_ou},
+		     {REDIRECTION_I, expr_redirection_in},
+		     {REDIRECTION_O, expr_redirection_o},
+		     {REDIRECTION_A, expr_redirection_a},
+		     {SOUS_SHELL, expr_sous_shell},
+		     {VIDE, expr_vide},
+		     {REDIRECTION_E, expr_redirection_er},
+		     {PIPE, expr_pipe}
+};
+
+int (*get_expr (expr_t expr)) (Expression *, Contexte *)
+{
+  int taille_tab_expr = sizeof (tab_expr) / sizeof (assoc);
+  for (int i = 0; i < taille_tab_expr; i++)
+    if (tab_expr[i].expr == expr)
+      return tab_expr[i].data;
+  return expr_not_implemented;
+}
+
+/*
+ * Initialise le contexte passé en parametre aux valeurs par défaut
+ */
+void
+initialiser_contexte (Contexte * c)
+{
+  c->bg = false;
+  c->fdin = STDIN_FILENO;
+  c->fdout = STDOUT_FILENO;
+  c->fderr = STDERR_FILENO;
+  c->fdclose = -1;
+  c->tube = NULL;
+}
+
+/*
+ * copie les valeurs de c1 dans c2
+ */
+void
+copier_contexte (Contexte * c1, Contexte * c2)
+{
+  c2->bg = c1->bg;
+  c2->fdin = c1->fdin;
+  c2->fdout = c1->fdout;
+  c2->fderr = c1->fderr;
+  c2->fdclose = c1->fdclose;
+  c2->tube = c1->tube;
+}
+
+/*
+ * applique un contexte et sauvegarde les anciens fd si save
+ * vaut vrai
+ */
+void
+appliquer_contexte (Contexte * c, bool save)
+{
+  swapfd (&(c->fdin), STDIN_FILENO, save);
+  swapfd (&(c->fdout), STDOUT_FILENO, save);
+  swapfd (&(c->fderr), STDERR_FILENO, save);
+  if (c->fdclose != -1)
+    close (c->fdclose);
+}
+
+/*
+ * effectue un dup2 sur la valeur pointée par fdnew  et sur fdold
+ * si save vaut vrai alors fdold est sauvegardé pour pouvoir effectuer 
+ * l'opération inverse.
+ */
+void
+swapfd (int *fdnew, int fdorigin, bool save)
+{
+  if (*fdnew != fdorigin)
+    {
+      int tmp;
+      if (save)
+	tmp = dup (fdorigin);
+      dup2 (*fdnew, fdorigin);
+      if (save)
+	*fdnew = tmp;
+      else
+	close (*fdnew);
+    }
+}
+
+int
+evaluer_expr (Expression * e)
+{
+  Contexte *c = malloc (sizeof (Contexte));
+  initialiser_contexte (c);
+  return get_expr (e->type) (e, c);
+}
+
+/*
+ * renvoi le pid du dernier fils créé
+ */
+pid_t
+get_last_pid ()
+{
+  return lpid;
+}
+\end{verbatim}
+
+\subsubsection{Expression simple}
+\label{expr_simple}
+\begin{verbatim}
+int
+expr_simple (Expression * e, Contexte * c)
+{
+  int (*intern) (char **) = get_intern (e->arguments[0]);
+  if (intern != NULL && c->bg != true)	// si la commande est une commande interne
+    // et en avant-plan
+    {
+      appliquer_contexte (c, true);	// on applique le contexte
+      int ret = intern (e->arguments);	// on exécute la commande interne
+      appliquer_contexte (c, false);	// et on restaure le contexte
+      return ret;
+
+    }
+  else
+    {				//pour le fils…
+      pid_t pid;
+      pid = fork ();
+      if (pid == 0)
+	{
+	  appliquer_contexte (c, false);	// on applique le contexte
+	  if (intern != NULL)	// si c'est une commande interne
+	    {
+	      exit (intern (e->arguments));	// on l'éxécute, puis on coupe
+	    }
+	  else
+	    {
+	      execvp (e->arguments[0], e->arguments);	// sinon c'est une commande externe,
+	      // donc on lui passe la main
+	      perror (e->arguments[0]);
+	      exit (1);
+	    }
+	}
+      else
+	{			// pour le père
+	  lpid = pid;		// on met à jour le pid du dernier fils créé
+	  if (c->tube != NULL)	// s'il existe on ferme le tube
+	    {
+	      close (c->tube[0]);
+	      close (c->tube[1]);
+	    }
+	  if (c->bg)		// si le fils est exécuté en arrière plan alors on
+	    return 0;		// redonne la main au shell
+	  int status;
+	  waitpid (pid, &status, 0);	// sinon on attend qu'il termine et on renvoie son code de retour
+	  return WIFEXITED (status) ? WEXITSTATUS (status) : 128 +
+	    WTERMSIG (status);
+	}
+    }
+}
+ 
+\end{verbatim}
+
+\subsubsection{Autre Expressions}
+\label{autre expression}
+\begin{verbatim}
+ int
+expr_not_implemented (Expression * e, Contexte * c)
+{
+  fprintf (stderr, "fonctionnalité non implémentée\\n");
+
+  return 1;
+}
+
+/* 
+ * Fonction traitant l'expression vide. Rien ne se passe. 
+ */
+int
+expr_vide (Expression * e, Contexte * c)
+{
+  return EXIT_SUCCESS;
+}
+
+/*
+ * Exécute l'expression située à gauche puis celle à droite
+ */
+int
+expr_sequence (Expression * e, Contexte * c)
+{
+  get_expr (e->gauche->type) (e->gauche, c);
+  return get_expr (e->droite->type) (e->droite, c);
+}
+
+/*
+ * Fonction traitant les expressions en arrière plan.
+ */
+int
+expr_bg (Expression * e, Contexte * c)
+{
+  c->bg = true;
+  return get_expr (e->gauche->type) (e->gauche, c);
+}
+
+
+\end{verbatim}
+\subsubsection*{pipe}
+\label{pipe}
+\begin{verbatim}
+int
+expr_pipe (Expression * e, Contexte * c)
+{
+  Contexte *c2 = malloc (sizeof (Contexte));	// on créé une copie du contexte
+  copier_contexte (c, c2);
+
+  int *tube = c2->tube = malloc (2 * sizeof (int));	// on garde une copie du tube
+  pipe (tube);			// dans le contexte de droite pour
+                                // pouvoir le fermer dans le shell
+
+  c->bg = true;			// la commande à gauche sera en arrière plan
+  c->fdout = tube[1];		// sa sortie sera redirigée vers l'entrée du pipe
+  c->fdclose = tube[0];		// et on fermera la sortie du tube
+
+  c2->fdin = tube[0];		// on redirigera la sortie du tube vers l'entrée de la
+                                // seconde commmande
+  c2->fdclose = tube[1];	// et on fermera l'entrée du tube
+
+  get_expr (e->gauche->type) (e->gauche, c);	// enfin on exécute les
+  return get_expr (e->droite->type) (e->droite, c2);	// deux commandes
+}
+
+\end{verbatim}
+\subsubsection*{expr booleene}
+\label{et et ou}
+\begin{verbatim}
+/*
+ * Traite l'expression SEQUENCE ET
+ * Exécute la première commande puis la seconde si la première a
+ * renvoyé un succès
+ */
+int
+expr_sequence_et (Expression * e, Contexte * c)
+{
+  int ret = get_expr (e->gauche->type) (e->gauche, c);
+  if (ret != 0)
+    return ret;
+  else
+    return get_expr (e->droite->type) (e->droite, c);
+}
+
+/*
+ * Traite l'expression SEQUENCE OU
+ * Exécute la première commande puis la seconde si la première a
+ * renvoyé un echec
+ */
+int
+expr_sequence_ou (Expression * e, Contexte * c)
+{
+  int ret = get_expr (e->gauche->type) (e->gauche, c);
+  if (ret == 0)
+    return ret;
+  else
+    return get_expr (e->droite->type) (e->droite, c);
+}
+\end{verbatim}
+\subsubsection*{sous shell}
+\label{sousshell}
+\begin{verbatim}
+/*
+ * Traite l'expression SOUS_SHELL
+ * En pratique on se contante de traiter l'expression de gauche
+ */
+int
+expr_sous_shell (Expression * e, Contexte * c)
+{
+  return get_expr (e->gauche->type) (e->gauche, c);
+}
+\end{verbatim}
+\subsubsection*{Redirection}
+\label{redirection}
+\begin{verbatim}
+/*
+ * Traite l'expression REDIRECTION_I
+ * on indique dans le contexte qu'il faudra utiliser à la place de
+ * l'entrée standard le descripteur correspondant au fichier donné
+ * en paramètre
+ */
+int
+expr_redirection_in (Expression * e, Contexte * c)
+{
+  c->fdin = open (e->arguments[0], O_RDONLY);
+  return get_expr (e->gauche->type) (e->gauche, c);
+}
+
+/*
+ * idem pour la sortie standard
+ */
+int
+expr_redirection_o (Expression * e, Contexte * c)
+{
+  c->fdout = open (e->arguments[0], O_WRONLY | O_CREAT | O_TRUNC, 0660);
+  return get_expr (e->gauche->type) (e->gauche, c);
+}
+
+/*
+ * idem mais le fichier est ouvert en mode append
+ */
+int
+expr_redirection_a (Expression * e, Contexte * c)
+{
+  c->fdout = open (e->arguments[0], O_WRONLY | O_CREAT | O_APPEND, 0660);
+  return get_expr (e->gauche->type) (e->gauche, c);
+}
+
+/*
+ * idem mais pour la sortie d'erreur
+ */
+int
+expr_redirection_er (Expression * e, Contexte * c)
+{
+  c->fderr = open (e->arguments[0], O_WRONLY | O_CREAT | O_TRUNC, 0660);
+  return get_expr (e->gauche->type) (e->gauche, c);
+}
+\end{verbatim}
+
+\subsection{Évaluation.h}
+\label{Eval.h}
+\begin{verbatim}
+ /*
+ *si Contient le contexte demandé pour la commande à lancer
+ */
+typedef struct Contexte {
+    bool bg; //si elle doit etre en arrière plan
+    int fdin;//si l'entrée standart de la commande doit être changé
+    int fdout;//idem pour la sortie standard
+    int fderr;//idem pour la sortie d'erreur
+    int fdclose;//file descriptor qu'il faudra fermer avant de lancer la commande, -1 si aucun
+    int* tube;//contient un tube à fermer par le père si besoin
+} Contexte;
+\end{verbatim}
+
+\subsection{Commandes-internes.c}
+
+\subsubsection{Les commandes internes de bases}
+\label{cmd_de_base}
+\begin{verbatim}
+ void verifier(int b,char* m)
+{
+  if(!b)
+    perror(m);
+}
+
+/*
+ * renvoi un pointeur vers la fonction traitant la commande
+ * interne passée en paramètre si elle existe, NULL sinon
+ */
+int (*get_intern (char* name)) (char**)
+{
+  int taille_tab_cmd_intern = sizeof (tab_cmd_intern)/sizeof(assoc);
+  for (int i=0; i<taille_tab_cmd_intern; i++)
+    if (strcmp(name,tab_cmd_intern[i].name)==0)
+      return tab_cmd_intern[i].data;
+  return NULL;
+}
+\end{verbatim}
+\subsubsection*{echo}
+\label{echo}
+\begin{verbatim}
+/*
+ * Commande permettant d'afficher des chaines de caractères
+ */
+int echo(char ** arg)
+{
+  
+  int c=1;
+  while (arg[c]!=NULL)
+    {
+      if (arg[c][0]=='$'){
+	char *tmp=arg[c]+1;
+	printf("%s ",getenv(tmp));
+	c++;
+      }
+      else{
+	printf("%s ",arg[c]);    // on affiche simplement ces paramètres sur la sortie standard
+	c++;
+      }
+    }
+  printf("\n");
+  return EXIT_SUCCESS;
+}
+\end{verbatim}
+\subsubsection*{date}
+\label{date}
+\begin{verbatim}
+/*
+ * Commande affichant la date
+ */
+int date(char ** arg)
+{
+  char c[256]; 
+  time_t tmp = time(NULL);                              // on recupère le temps en secondes
+  struct tm * t =localtime(&tmp);                       // on génère une structure tm
+  strftime(c, sizeof(c), "%A %d %B %Y, %X (UTC%z)",t);  // on affiche selon le format français
+  printf("%s\n", c);
+  return EXIT_SUCCESS;
+}
+
+\end{verbatim}
+\subsubsection*{cd}
+\label{cd}
+\begin{verbatim}
+/*
+ * Commande permettant de changer de répertoire courant
+ */
+int cd (char ** arg)
+{
+  int r;
+  if (arg[1]==NULL)
+  {
+    r = chdir(getenv("HOME"));       // cas d'un retour au home cd sans paramètre
+    verifier(r!=-1,"cd");
+  }
+  else
+  {
+    r = chdir(arg[1]);               // cas classique : on apelle juste chdir avec le nom du dossier
+    verifier(r!=-1, "cd");
+  }
+  return r;
+}
+
+\end{verbatim}
+\subsubsection*{pwd}
+\label{pwd et hostname}
+\begin{verbatim}
+/* 
+ * Commande qui affiche le répertoire courant
+ */
+int pwd(char ** arg) 
+{
+  char pwd[PATH_MAX];
+  getcwd(pwd, sizeof(pwd));
+  printf("%s\n", pwd);
+  return EXIT_SUCCESS;
+}
+
+
+/*
+ * Commande qui affiche le nom de l'hote local
+ */
+int hostname(char ** arg) 
+{
+  char hostname[HOST_NAME_MAX +1];
+  gethostname(hostname,sizeof(hostname));
+  printf("Hostname : %s\n", hostname);
+  return EXIT_SUCCESS;
+}
+
+\end{verbatim}
+\subsubsection*{exit}
+\label{exit et kill}
+\begin{verbatim}
+/*
+ * Commande permettant que quitter le shell
+ */
+int my_exit(char ** arg) 
+{
+  if (arg[1] != NULL)         // si il y a un argument
+    exit(atoi(arg[1]));       // on quitte le shell en renvoyant la valeur de l'argument
+  else
+    exit(0);
+}
+
+\subsubsection*{kill}
+/*
+ * Commande kill
+ * on va utiliser la fonction kill de la libc
+ */
+int killShell (char ** arg)
+{
+  if(arg[1]==NULL)
+  {
+    errno=EINVAL;
+    perror("kill");
+    return EXIT_FAILURE;
+  }
+  int ret;
+  if (arg[1][0]!= '-')
+  {
+    int c = 1;
+    while (arg[c]!=NULL)
+    {
+      ret = kill (atoi(arg[1]),SIGTERM);        // cas par defaut sans signal passé en paramètre
+      verifier(ret!=-1, "kill");
+      c++;
+    }
+  }
+  else
+  {
+    char *sign = arg[1]+1;                      // on récupère le premier paramètre sans le "-"
+    int x = atoi (sign);
+    int c=2;
+    while (arg[c]!=NULL)
+    {
+      ret = kill(atoi(arg[c]),x);               // et on lance le signal
+      verifier(ret!=-1, "kill");
+      c++;
+    }
+  }
+  return ret;
+}
+
+\end{verbatim}
+\subsubsection*{history}
+\label{history}
+\begin{verbatim}
+/*
+ * Commande qui affiche l'historique du shell. On peut l'appeler avec un argument
+ * pour obtenir l'historique des n dernières commandes 
+ */
+int history(char ** arg) 
+{
+  if (arg[2] != NULL)
+  {
+    errno=EINVAL;
+    perror("history");
+    return EXIT_FAILURE;
+  }
+  HIST_ENTRY ** hystory_list = history_list ();                       // on crée une variable contenant l'historique
+  int treshold = history_length;
+  if (arg[1] != NULL && atoi(arg[1]) < history_length)                // si il y a un argument, 
+    treshold = atoi(arg[1]) +1;                                       // et qu'il est inférieur au nombre d'éléments de l'historique
+  for (int i = history_length - treshold; i < history_length; i++)    // on affiche les n derniers rangs de l'historique
+    printf ("%d: %s\n", i + history_base, hystory_list[i]->line);     // (sans compter la commande history qu'on vient de lancer)
+  return EXIT_SUCCESS;
+}
+\end{verbatim}
+
+\subsubsection{remote shell}
+\label{remote shell}
+\begin{verbatim}
+ typedef struct remote_machine {   // structure représentant une machine distante
+    char* name;
+} remote_machine;
+
+/* Tableau contenant des pointeurs vers des structures de machines distantes */
+remote_machine **tab_machines=NULL;
+
+/* Taille initiale du tableau */
+int tab_length =0;
+
+/* Nombre de machines présentes dans le tableau */
+int nb_machine=0;
+
+int remote_localhost(char** param);
+int remote_add(char** param);
+int remote_remove(char ** param);
+int remote_list(char ** param);
+int remote_all(char** param);
+int remote_cmd_simple(char** param);
+			  
+int (*get_remote (char* name)) (char**);
+
+/* Tableau associant les fonctionnalités de la commande remote avec les traitants */ 			  
+assoc tab_remote[] = {{"localhost", remote_localhost},
+		      {"add", remote_add},
+		      {"remove", remote_remove},
+		      {"all", remote_all},
+		      {"list", remote_list}};
+
+/*
+ * fonction interne remote, elle se contente d'appeler la fonction s'occupant de la 
+ * sous-commande correspondant à la commande actuelle
+ */
+ 
+int remote(char** params)
+{
+    int (*cmd_remote) (char**)=get_remote(params[1]);
+    if(cmd_remote!=NULL)
+	return cmd_remote(params);
+    else
+    {
+	fprintf(stderr,"sous commande de remote inconnue (%s)\n",params[1]);
+	return EXIT_FAILURE;
+    }
+}
+
+/*
+ * parcourt le tableau d'association, renvoi la fonction s'ocupant de « remote
+ * <name> » si elle existe, sinon remote_cmd_simple
+ */
+int (*get_remote (char* name)) (char**) 
+{
+  int taille_tab_remote = sizeof (tab_remote)/sizeof(assoc);
+  for (int i=0; i<taille_tab_remote; i++)
+    if (strcmp(name,tab_remote[i].name)==0)
+      return tab_remote[i].data;
+  return remote_cmd_simple;
+}
+\end{verbatim}
+\subsubsection*{localhost}
+\label{localhost}
+\begin{verbatim}
+
+
+
+/*
+ * Commande créant un shell faussement distant sur la machine locale 
+ */
+int remote_localhost(char** param)
+{
+    char** param_remote=malloc(3*sizeof(char**));//on créé la liste de la commande à exécuter ("./Shell -r")
+    param_remote[0]=strdup("./Shell");
+    param_remote[1]=strdup("-r");
+    param_remote[2]=NULL;
+    
+    Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_remote);//on construit l'expression
+    e=ConstruireNoeud(BG,e,NULL,NULL);
+    Contexte* c=malloc(sizeof(Contexte));
+    
+    initialiser_contexte(c);
+    int tube[2];
+    pipe(tube);
+    c->fdin=tube[0];
+    c->fdclose=tube[1];
+    param+=2;
+    while(*param!=NULL)//on écrit les paramètres de la fonction sur l'entrée du nouveau shell
+    {
+	write(tube[1],*param,strlen(*param));
+	write(tube[1]," ",1);
+	param++;
+    }
+    write(tube[1],"\n",1);
+    get_expr(BG)(e,c);//et on l'exécute
+    close(tube[1]);
+    expression_free(e);
+    free(c);
+    int status;
+    waitpid(get_last_pid(),&status,0);
+    return WIFEXITED(status) ? WEXITSTATUS(status) : 128 + WTERMSIG(status);
+}
+
+/* 
+ * Ajoute les noms passés en paramètres à la liste des machines.
+ */
+
+ \end{verbatim}
+\subsubsection*{remote add}
+\label{remote add}
+\begin{verbatim}
+ 
+int remote_add(char** param)
+{
+    param+=2;                               // on saute le «remote» et le «add»
+    int i=0;
+    int alreadyInList=0;
+    while(param[i] != NULL){
+      for (int j=0; j<nb_machine; j++) {
+	if (strcmp(param[i],tab_machines[j]->name)==0) {
+	  alreadyInList=1;
+	}
+      } 
+      if (alreadyInList == 0) {
+	//nb_add_machines++;
+	remote_machine* rm=malloc(sizeof(remote_machine));
+	rm->name=strdup(param[i]);
+	if(i+nb_machine>=tab_length){
+	    if(tab_length==0)
+		tab_length=10;
+	    else
+		tab_length*=2;
+	    tab_machines=realloc(tab_machines,sizeof(remote_machine*)*tab_length);
+	}
+	tab_machines[nb_machine] = rm;
+	nb_machine++;
+      }
+      alreadyInList=0;
+      i++;
+    }
+    return EXIT_SUCCESS;
+}
+
+/*
+ *supprime les machines existantes du tableau
+ */
+int remote_remove(char ** param) 
+{
+  for (int i=0; tab_machines[i]; i++) 
+  {
+    free(tab_machines[i]->name);
+    free(tab_machines[i]);
+  }
+  nb_machine=0;
+  return EXIT_SUCCESS;
+}
+
+
+/* 
+ * Commande affichant la liste des machines connectées 
+ */
+int remote_list(char ** param)
+{
+  if (nb_machine == 0)
+  {
+    fprintf(stderr,"Il n'y a actuellement aucune machine dans la liste des machines distantes connectées.\nUtilisez remote add pour ajouter des machines.\n");
+    return EXIT_SUCCESS;
+  }
+  else 
+    for (int i=0; i<nb_machine; i++)
+      printf("%s\n", tab_machines[i]->name);
+  return EXIT_SUCCESS;
+}
+
+
+ \end{verbatim}
+\subsubsection*{remote commande simple}
+\label{remotecmdsmpl}
+\begin{verbatim}
+/*
+ * Fonction exécutant une commande sur le shell d'une machine distante connectée.
+ * On donnera en paramètre une machine, et une commande à exécuter avec ses paramètres
+ */
+int remote_cmd_simple(char** param)
+{
+    remote_machine* lmachine=NULL;
+    param++;//on saute le premier paramèter (toujours remote)
+    for(int i=0;i<nb_machine;i++)//on cherche si la machine est enregistrée
+    {
+	if(tab_machines[i]!=NULL && strcmp(tab_machines[i]->name,*param)==0)
+	{
+	    lmachine=tab_machines[i];
+	    break;
+	}
+    }
+    if (!lmachine) //si non on s'arète
+    {
+      fprintf(stderr,"aucune machine de ce nom n'est présente dans la liste.\nUtilisez remote list pour obtenir la liste\n");
+      return EXIT_FAILURE;
+    }
+    param++;//on saute le deuxième paramètre (c'est à dire le nom de la machine)
+    
+    
+    char** param_ssh=InitialiserListeArguments();//on va lancer notre shell en mode distant via ssh
+    param_ssh=AjouterArg(param_ssh,"ssh");
+    param_ssh=AjouterArg(param_ssh,lmachine->name);
+    param_ssh=AjouterArg(param_ssh,"./Shell -r");
+
+    char** param_echo=InitialiserListeArguments();//lui passer les paramètres via echo
+    param_echo=AjouterArg(param_echo,"echo");
+    while(*param!=NULL)
+	param_echo=AjouterArg(param_echo,*(param++));
+    
+    char** param_xcat=InitialiserListeArguments();//et afficher en local le tout avec xcat
+    param_xcat=AjouterArg(param_xcat,"./xcat.sh");
+    param_xcat=AjouterArg(param_xcat,"-hold");//on ne ferme pas à la fin du programme (sinon on a pas le temps de lire les résultats)
+    param_xcat=AjouterArg(param_xcat,"-T");//le titre est le nom de la machine
+    param_xcat=AjouterArg(param_xcat,lmachine->name);
+    
+    Expression* e=ConstruireNoeud(SIMPLE,NULL,NULL,param_ssh);     //on construit les trois commandes
+    Expression* echo=ConstruireNoeud(SIMPLE,NULL,NULL,param_echo);
+    Expression* xcat=ConstruireNoeud(SIMPLE,NULL,NULL,param_xcat);
+    e=ConstruireNoeud(PIPE,echo,e,NULL);//on pipe echo sur ssh
+    e=ConstruireNoeud(PIPE,e,xcat,NULL);//et ssh sur xcat
+    Contexte* c=malloc(sizeof(Contexte));
+    initialiser_contexte(c);
+    int ret= get_expr(PIPE)(e,c);//on exécute enfin le tout
+    expression_free(e);
+    free(c);
+    return ret;
+}
+
+/* 
+ * Fonction exécutant une commande sur le shell de toutes les machines connectées.
+ * On donnera en paramètre la commande et ses arguments
+ */
+int remote_all(char ** param) 
+{
+    if (nb_machine == 0)
+    {
+	fprintf(stderr,"Il n'y a actuellement aucune machine dans la liste des machines distantes connectées.\nUtilisez remote add pour ajouter des machines.");
+	return EXIT_SUCCESS;
+    }
+    char * tmp = param[1];
+    pid_t* pid=malloc(sizeof(pid_t)*nb_machine);
+    for (int i=0; i<nb_machine; i++)                          // pour chaque machine, on exécute cmd_simple avec le nom de la machine et les parametres
+    {
+	if((pid[i]=fork())==0)
+	{
+	    param[1] = tab_machines[i]->name;                       // le premier paramètre correspond au nom de la machine  
+	    exit(remote_cmd_simple(param));                         // on appelle ensuite cmd_simple avec le nom de la machine et la liste de paramètres.
+	}
+    }
+    param[1] = tmp;
+    for (int i=0; i<nb_machine; i++)
+	waitpid(pid[i],NULL,0);
+    return EXIT_SUCCESS;
+}
+				  
+
+\end{verbatim}
+\label{}
+\begin{verbatim}
+ 
+\end{verbatim}
 
 
 \end{document}

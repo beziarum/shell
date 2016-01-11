@@ -9,6 +9,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <sys/wait.h>
+#include <limits.h>
 
 extern int yyparse_string(char *);
 
@@ -122,15 +123,16 @@ expression_free(Expression *e)
   free(e);
 }
 
-int printPwd() 
+/* 
+ * Commande renvoyant une chaine de caractères contenant le répertoire courant.
+ */
+char* getPwd() 
 {
-  char pwd[512];                   
-  getcwd(pwd, sizeof(pwd));
-  printf ("\x1b[33m%s \x1b[0m", pwd);
-  return 0;
+  char* pwd = malloc(PATH_MAX*sizeof(char));                   
+  getcwd(pwd, PATH_MAX);
+  return pwd;
 }
   
-
 
 /*
  * Lecture de la ligne de commande à l'aide de readline en mode interactif
@@ -145,8 +147,7 @@ my_yyparse(void)
     {
       char *line = NULL;
       char buffer[1024];
-      printPwd();
-      snprintf(buffer, 1024, "(%d):", status);
+      snprintf(buffer, 1024, "\x1b[33m%s\x1b[0m(%d)", getPwd(), status);    // affichage du répertoire courant en jaune
       line = readline(buffer);
       if(line != NULL)
 	{
@@ -166,8 +167,6 @@ my_yyparse(void)
   else
     {
       // pour le mode distant par exemple
-      
-      int ret; int c;
           
       char *line = NULL;
       size_t linecap = 0;
@@ -180,7 +179,9 @@ my_yyparse(void)
 	  ret = yyparse_string(line);  
 	  free(line);
 	  return ret;
-	}    
+	}
+      else
+	  exit(0);
     }
 }
 
@@ -225,27 +226,25 @@ my_yyparse(void)
       |       fichier vers lequel on redirige.						      |
       `--------------------------------------------------------------------------------------*/
 
-
-int
-main (int argc, char **argv)
+/* 
+ * Fonction principale.
+ */
+int main (int argc, char **argv)
 {
-  // faire en sorte qu'interactive_mode = 0 lorsque le shell est distant 
-  if (interactive_mode)
-    {
-      using_history();
-    }
-  else
-    {
-      //  mode distant 
-    }
-  
+    for(int i=1; i<argc; i++)
+	if(strcmp("-r",argv[i])==0)
+	    interactive_mode=false;
+    using_history();
   while (1){
     if (my_yyparse () == 0) {  /* L'analyse a abouti */
-      afficher_expr(ExpressionAnalysee);
       fflush(stdout);
       status = evaluer_expr(ExpressionAnalysee);
       expression_free(ExpressionAnalysee);
 
+
+      //on exécute un waitpid non bloquant (WNOHANG)
+      //tant que sa valeur de retour vaut autre chose que 0 alors
+      //c'est le pid d'un processus qui c'est terminé
       int pid,status;
       while( (pid = waitpid(-1,&status,WNOHANG)) > 0)
 	  printf("le processus %d est fini (%d)\n",
