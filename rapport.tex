@@ -221,8 +221,48 @@ On affiche ensuite ce dernier. \ref{pwd et hostname}
 \newpage
 \section{Remote Shell}
 
-..........paul
+La commande interne «~remote~» doit permetre d'exécuter simplement des commandes sur une machine
+distante ou sur un ensemble de machines distantes en utilisant ssh en interne. Dans un premier 
+temps nous avons essayé d'ouvrir la connection dès le «~remote add~», comme suggéré dans le 
+sujet, mais nous nous sommes très rappidement confronté à plusieurs problème parmis lesquels
+principalement la difficulté pour savoir quand une commande distante était terminé, et donc quand
+il falait rendre la main au shell. Nous avons alors décidé de n'établire la connection qu'au moment
+d'exécuter une des commandes distantes, et de la fermer après la fin de cette dernière.\newline
 
+Une machine n'est donc représenté que par son nom, Bien que nous ayons gardé en pratique une
+structure pour la représenter, n'étant pas sûr de la façon dont notre code allait évoluer et
+donc si nous n'allions pas avoir besoin de sauvegarder plus d'informations que simplement le
+nom de la machine distante.
+
+
+\subsection{Shell faussement distant}
+
+Nous avons tout d'abord créé une commande «~remote localhost~» qui ne lançait pas la commande
+suivante via ssh mais en local, en utilisant cepandant notre shell en tant qu'interface entre le shell
+controlé par l'utilisateur et le programme demandé. Pour (re)lancer notre shell nous construisons une
+expression demandant à lancer notre shell avec l'option -r qui active le mode distant. La commande
+“distante” est lancée en ayant écrit dans un pipe branché sur l'entrée du nouveau shell.
+
+\subsection{Gestion des listes (add, remove et list)}
+
+Les deux premières commandes ont d'abord été pensé pour gérer respectivement l'initialialisation
+et la fermeture du shell distant, ce qui complexifiait particulièrement leur structure. Par la
+suite, ayant décidé de n'effectuer ces actions qu'au moment d'exécuter une commande distante, nous
+avons pu les simplifiers.
+
+\subsection{Exécution distante}
+
+Pour cette partie nous avons en très grande partie réutilisé le code créé pour le shell faussement
+distant. En effet nous avons repris l'idée de créé une expression valide et de l'exécuter à l'aide
+de la première partie du programme. simplement au lieu de lancer notre shell nous lançons ssh en
+précisant dans les paramètre le programme à appeler, c'est à dire notre propre shell, et nous appelons
+le programme demandé en écrivant via un pipe dans l'entrée standard de ssh, donc de notre shell distant.
+
+\subsection{xcat}
+
+Cette dernière partie a finalement été facilement traitée : il nous a suffit de piper la sortie de ssh
+sur l'entrée du programme xcat.sh, en donnant à ce dernier les paramètres nécessaires pour qu'il ne se coupe pas
+sitôt ssh finit et qu'il affiche en titre le nom de la machine sur laquelle la commande a été exécutée
 
 \ref{remote shell}
 
@@ -1074,5 +1114,4 @@ int remote_all(char ** param)
 
 
 \end{document}
-
 
