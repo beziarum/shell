@@ -25,4 +25,4 @@ lex.yy.c: Analyse.l Shell.h y.tab.h
 
 .PHONY: clean
 clean:
-	rm -f *.o y.tab.* y.output lex.yy.*
+	rm -f *.o y.tab.* y.output lex.yy.* Shell
